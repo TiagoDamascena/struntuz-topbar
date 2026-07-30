@@ -1,44 +1,59 @@
-// Nocturne tokens, shared with struntuz-greet.
-$bg: #161826;
+// Nocturne tokens. Layout and type come from the "Desktop Nocturne v3" design;
+// the glass below is the greeter's, so login and desktop read as one system.
 $text: #e9e9ed;
-$text-dim: rgba(233, 233, 237, 0.72);
-$accent-300: #d2cefd;
+$text-dim: rgba(233, 233, 237, 0.6);
+$accent: #9184d9;
 
-// The fill stays thin so the bar reads as a tint of the wallpaper behind it
-// rather than as a panel over it; the blur does the separating.
-$glass: rgba(22, 24, 38, 0.34);
-$edge: rgba(233, 233, 237, 0.09);
-
+// Nothing paints the strip itself: every bar element is its own floating pill.
+// The fill stays thin so a pill reads as a tint of what is behind it rather than
+// as a panel over it, and the edge is the text's own ink at low alpha — a
+// hairline that holds on any backdrop instead of being a line of its own colour.
+// Both lean on the compositor's blur to do the separating (see README.md);
+// without the layerrule the pills are merely translucent.
+$pill-bg: rgba(22, 24, 38, 0.34);
+$pill-edge: rgba(233, 233, 237, 0.09);
+$pill-height: 44px;
 $pill: 999px;
 
-// GTK4 gained backdrop-filter in 4.20; on anything older this degrades to a
-// flat transparency instead of a blur.
-@mixin frost {
-  backdrop-filter: blur(24px);
-}
+// No `backdrop-filter`, unlike the greeter: it blurs what is painted below it
+// *inside the same window*, and this one is transparent, so it has nothing to
+// work with.
 
 window.background {
   background-color: transparent;
 }
 
 .bar {
-  @include frost;
-  margin: 10px 10px 0;
-  padding: 0 12px;
-  min-height: 34px;
-  border: 1px solid $edge;
-  border-radius: $pill;
-  background-color: $glass;
   font-family: Inter, sans-serif;
   color: $text;
 }
 
-.section {
-  padding: 0 4px;
+.pill {
+  // GTK sizes min-height against the content box, so the 1px edge would add on
+  // top of it; the design counts the edge inside its 44px.
+  min-height: $pill-height - 2px;
+  border: 1px solid $pill-edge;
+  border-radius: $pill;
+  background-color: $pill-bg;
 }
 
+// One size for both runs. The design draws the date at 16px and the time at 17,
+// but each label centres its own line box, so the 1px difference lands their
+// baselines a pixel apart and reads as crooked; at these sizes it carried no
+// hierarchy anyway, which the weight and the opacity below do on their own.
+$clock-size: 16px;
+
 .clock {
-  font-family: Rubik, sans-serif;
+  padding: 0 20px;
+}
+
+.clock-date {
+  font-size: $clock-size;
+  color: $text-dim;
+}
+
+.clock-time {
+  font-size: $clock-size;
   font-weight: 500;
-  color: $text;
+  letter-spacing: 0.01em;
 }

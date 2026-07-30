@@ -1,16 +1,9 @@
 import app from "ags/gtk4/app"
 import { Astal, Gtk, Gdk } from "ags/gtk4"
-import { createPoll } from "ags/time"
-import GLib from "gi://GLib"
+import Clock from "./Clock"
 
 export default function Bar(gdkmonitor: Gdk.Monitor) {
   const { TOP, LEFT, RIGHT } = Astal.WindowAnchor
-
-  const clock = createPoll(
-    "",
-    1000,
-    () => GLib.DateTime.new_now_local().format("%H:%M") ?? "",
-  )
 
   return (
     <window
@@ -20,14 +13,15 @@ export default function Bar(gdkmonitor: Gdk.Monitor) {
       gdkmonitor={gdkmonitor}
       exclusivity={Astal.Exclusivity.EXCLUSIVE}
       anchor={TOP | LEFT | RIGHT}
+      marginTop={10}
+      marginLeft={14}
+      marginRight={14}
       application={app}
     >
       <centerbox class="bar">
-        <box $type="start" class="section" halign={Gtk.Align.START} />
-        <box $type="center" class="section" halign={Gtk.Align.CENTER}>
-          <label class="clock" label={clock} />
+        <box $type="center" valign={Gtk.Align.CENTER}>
+          <Clock />
         </box>
-        <box $type="end" class="section" halign={Gtk.Align.END} />
       </centerbox>
     </window>
   )
