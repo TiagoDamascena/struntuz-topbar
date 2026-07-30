@@ -1,6 +1,7 @@
 import app from "ags/gtk4/app"
 import { Astal, Gtk, Gdk } from "ags/gtk4"
 import Clock from "./Clock"
+import Workspaces from "./Workspaces"
 
 export default function Bar(gdkmonitor: Gdk.Monitor) {
   const { TOP, LEFT, RIGHT } = Astal.WindowAnchor
@@ -19,6 +20,9 @@ export default function Bar(gdkmonitor: Gdk.Monitor) {
       application={app}
     >
       <centerbox class="bar">
+        <box $type="start" spacing={8} valign={Gtk.Align.CENTER}>
+          <Workspaces />
+        </box>
         <box $type="center" valign={Gtk.Align.CENTER}>
           <Clock />
         </box>

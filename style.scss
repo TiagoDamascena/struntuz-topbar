@@ -15,6 +15,18 @@ $pill-edge: rgba(233, 233, 237, 0.09);
 $pill-height: 44px;
 $pill: 999px;
 
+// The workspace dots keep the palette of the waybar this replaces (Catppuccin
+// Mocha) rather than the design's single accent, so the states stay the colours
+// already learned. The design contributes the shape: a dot per workspace, the
+// focused one stretched into a bar.
+// waybar pairs overlay2 with overlay0, which is 1.73:1 — enough on the numerals
+// it paints there, not on an 8px dot. The pair moves one step out on each side,
+// to 4.10:1, staying in the same ramp.
+$ws-active: #cba6f7; // mauve
+$ws-occupied: #a6adc8; // subtext0
+$ws-empty: #45475a; // surface1
+$ws-hover: #f5c2e7; // pink
+
 // No `backdrop-filter`, unlike the greeter: it blurs what is painted below it
 // *inside the same window*, and this one is transparent, so it has nothing to
 // work with.
@@ -35,6 +47,42 @@ window.background {
   border: 1px solid $pill-edge;
   border-radius: $pill;
   background-color: $pill-bg;
+}
+
+.workspaces {
+  padding: 0 18px;
+}
+
+// A plain coloured shape, so every part of GTK's own button styling has to be
+// unset — the theme brings a gradient, an edge and a minimum size of its own.
+.dot {
+  min-width: 8px;
+  min-height: 8px;
+  padding: 0;
+  border: 0;
+  border-radius: $pill;
+  background-image: none;
+  box-shadow: none;
+  transition:
+    min-width 220ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    background-color 220ms ease;
+}
+
+.dot.active {
+  min-width: 26px;
+  background-color: $ws-active;
+}
+
+.dot.occupied {
+  background-color: $ws-occupied;
+}
+
+.dot.empty {
+  background-color: $ws-empty;
+}
+
+.dot:hover {
+  background-color: $ws-hover;
 }
 
 // One size for both runs. The design draws the date at 16px and the time at 17,

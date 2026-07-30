@@ -57,6 +57,18 @@ The design is a Claude Design project ("Interface Linux minimalista roxa",
 transparent 44px strip of independent floating pills, not one continuous bar —
 hence the shared `.pill` class in `style.scss`.
 
+The bar it replaces is the user's waybar (`~/.config/waybar/`), and that is the
+other source: `widget/Workspaces.tsx` takes its shape from the design (a dot per
+workspace, the focused one stretched to 26px) and its state colours from waybar's
+Catppuccin palette, since those are the ones already learned. Check waybar's
+`config` and `style.css` before inventing behaviour for a new item — but check
+the pair's contrast too: waybar's own occupied/empty colours are 1.73:1, which
+carries on a numeral and disappears on an 8px dot.
+
+**GTK4 does animate `min-width`**, so the focused dot grows into its bar through
+a CSS `transition` rather than any widget code (measured: 19 → 26px across the
+frames after a switch). Worth remembering for the items still to come.
+
 `flake.nix`'s `astalLibsFor` is the single list of Astal libraries, feeding both
 the package build and the dev shell. It currently carries `io`, `astal4`,
 `hyprland`, `tray`, `mpris`, `network`, `wireplumber` and `battery` — the sources

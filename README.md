@@ -5,8 +5,13 @@ A Wayland top bar built with [AGS/Astal](https://aylur.github.io/ags/) (TypeScri
 [struntuz-greet](https://github.com/tiagodamascena/struntuz-greet) and it ships as
 a flake.
 
-At this point the bar carries the clock only; the rest of the design follows one
-item at a time.
+At this point the bar carries the workspace selector and the clock; the rest of
+the design follows one item at a time.
+
+Workspaces are a fixed 1–9, as the waybar this replaces shows them, and keep that
+bar's Catppuccin colours per state: mauve for the focused one, subtext0 where
+windows are open, surface1 for the empty ones and pink on hover. The focused dot
+stretches into a bar, and the change is animated.
 
 ## Blur
 
