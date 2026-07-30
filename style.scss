@@ -1,0 +1,44 @@
+// Nocturne tokens, shared with struntuz-greet.
+$bg: #161826;
+$text: #e9e9ed;
+$text-dim: rgba(233, 233, 237, 0.72);
+$accent-300: #d2cefd;
+
+// The fill stays thin so the bar reads as a tint of the wallpaper behind it
+// rather than as a panel over it; the blur does the separating.
+$glass: rgba(22, 24, 38, 0.34);
+$edge: rgba(233, 233, 237, 0.09);
+
+$pill: 999px;
+
+// GTK4 gained backdrop-filter in 4.20; on anything older this degrades to a
+// flat transparency instead of a blur.
+@mixin frost {
+  backdrop-filter: blur(24px);
+}
+
+window.background {
+  background-color: transparent;
+}
+
+.bar {
+  @include frost;
+  margin: 10px 10px 0;
+  padding: 0 12px;
+  min-height: 34px;
+  border: 1px solid $edge;
+  border-radius: $pill;
+  background-color: $glass;
+  font-family: Inter, sans-serif;
+  color: $text;
+}
+
+.section {
+  padding: 0 4px;
+}
+
+.clock {
+  font-family: Rubik, sans-serif;
+  font-weight: 500;
+  color: $text;
+}
