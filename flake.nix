@@ -38,6 +38,7 @@
           io
           astal4
           hyprland
+          notifd
           tray
           mpris
           network

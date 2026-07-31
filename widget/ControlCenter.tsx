@@ -4,6 +4,7 @@ import { Accessor, createState } from "ags"
 import { Icons } from "../lib/icons"
 import { batteryStatus, userAvatar, userInitial, userName } from "../lib/session"
 import { t } from "../lib/i18n"
+import Notifications from "./Notifications"
 import PowerMenu from "./PowerMenu"
 
 // The design's own geometry: the panel hangs 66px below the top of the screen,
@@ -106,6 +107,7 @@ export default function ControlCenter(props: {
           marginEnd={PANEL_SIDE}
         >
           <UserPill visible={main} onPower={() => setMenu(true)} />
+          <Notifications visible={main} />
           <PowerMenu visible={menu} onBack={() => setMenu(false)} onRun={dismiss} />
         </box>
       </overlay>

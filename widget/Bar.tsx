@@ -4,6 +4,7 @@ import { createState } from "ags"
 import Clock from "./Clock"
 import ControlCenter from "./ControlCenter"
 import ControlCenterButton from "./ControlCenterButton"
+import Toasts from "./Toasts"
 import Workspaces from "./Workspaces"
 
 export default function Bar(gdkmonitor: Gdk.Monitor) {
@@ -13,6 +14,7 @@ export default function Bar(gdkmonitor: Gdk.Monitor) {
   // panel always comes down from the bar that was clicked.
   const [open, setOpen] = createState(false)
   ControlCenter({ gdkmonitor, open, close: () => setOpen(false) })
+  Toasts({ gdkmonitor, hidden: open })
 
   return (
     <window

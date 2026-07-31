@@ -10,6 +10,16 @@ export interface Strings {
   controlCenter: string
   back: string
 
+  notifications: string
+  notificationsClear: string
+  notificationsEmpty: string
+  notificationDismiss: string
+  // How long ago a notification arrived. `%d` is the count of the unit.
+  notificationNow: string
+  notificationMinutes: string
+  notificationHours: string
+  notificationDays: string
+
   battery: string
   batteryLeft: string
   batteryCharging: string
@@ -37,6 +47,15 @@ const EN: Strings = {
   controlCenter: "Control Center",
   back: "Back",
 
+  notifications: "Notifications",
+  notificationsClear: "Clear all",
+  notificationsEmpty: "Nothing new",
+  notificationDismiss: "Dismiss",
+  notificationNow: "now",
+  notificationMinutes: "%dm",
+  notificationHours: "%dh",
+  notificationDays: "%dd",
+
   battery: "Battery",
   batteryLeft: "left",
   batteryCharging: "charging",
@@ -61,6 +80,15 @@ const PT_BR: Partial<Strings> = {
 
   controlCenter: "Central de controle",
   back: "Voltar",
+
+  notifications: "Notificações",
+  notificationsClear: "Limpar tudo",
+  notificationsEmpty: "Nada de novo",
+  notificationDismiss: "Dispensar",
+  notificationNow: "agora",
+  notificationMinutes: "%d min",
+  notificationHours: "%d h",
+  notificationDays: "%d d",
 
   battery: "Bateria",
   batteryLeft: "restantes",

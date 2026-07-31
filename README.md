@@ -5,8 +5,8 @@ A Wayland top bar built with [AGS/Astal](https://aylur.github.io/ags/) (TypeScri
 [struntuz-greet](https://github.com/tiagodamascena/struntuz-greet) and it ships as
 a flake.
 
-At this point the bar carries the workspace selector, the clock and the control
-centre; the rest of the design follows one item at a time.
+At this point the bar carries the workspace selector, the clock, the control
+centre and the notifications; the rest of the design follows one item at a time.
 
 Workspaces are a fixed 1–9, as the waybar this replaces shows them, and keep that
 bar's Catppuccin colours per state: mauve for the focused one, subtext0 where
@@ -31,6 +31,46 @@ gets its own, opened by its own bar.
 
 Each entry runs a shell command from `powerCommands` (see below), so what
 "lock" means is the session's business and not the bar's.
+
+Under the user pill is the notification list, described next.
+
+## Notifications
+
+The bar is the session's notification daemon. It takes
+`org.freedesktop.Notifications` on startup, which means **swaync, dunst, mako
+and the rest cannot run beside it** — whoever gets the name first keeps it, and
+the other one sits there receiving nothing. On NixOS that usually means turning
+the old one off in the same commit:
+
+```nix
+services.swaync.enable = false;
+```
+
+A D-Bus-activated daemon is also worth checking: with a `.service` file naming
+`org.freedesktop.Notifications`, stopping the unit is not enough, since the next
+notification starts it again. The bar holding the name is what keeps that from
+happening, so start it before anything sends one.
+
+What arrives shows up twice. A card slides into the top right corner for as long
+as its sender asked for, or `toastTimeout` when it asked for nothing; a critical
+one stays until it is dealt with. At most `toastLimit` cards stack up, newest on
+top, and the oldest leaves early to make room. The buttons on a card are the
+actions the sender offered, the first one marked as the one it expects; the
+cross closes the notification for good.
+
+A card that simply runs out of time is not the same as one that was dismissed:
+the first only stops being shown, and the notification stays in the control
+centre's list — newest first, with the app's own icon where it sent one and the
+bar's bell where it did not. `Clear all` empties it, and the count rides on the
+control centre's button in the bar. Nothing expires on its own, so the list is
+what was missed rather than what happened to be on screen recently.
+
+Do-not-disturb (Astal's `dont-disturb`, shared with any other astal-notifd
+front end) silences the cards only; those notifications still land in the list.
+There is no toggle for it in the bar yet.
+
+The cards live in a third window with a namespace of its own, so blurring them
+takes a third layerrule (see below).
 
 ## Blur
 
@@ -79,8 +119,20 @@ layerrule {
 }
 ```
 
-`ignore_alpha` matters more here than it does on the bar, and it has to stay at
-`0`. Hyprland reads it as "skip the pixels at or below this alpha", so `0` is
+The toasts are a third window, and take the same rule again on
+`struntuz-toasts`:
+
+```
+layerrule {
+  name=struntuz-toasts-blur
+  blur=on
+  ignore_alpha=0
+  match:namespace=struntuz-toasts
+}
+```
+
+`ignore_alpha` matters more on the control centre than it does on the bar, and
+it has to stay at `0`. Hyprland reads it as "skip the pixels at or below this alpha", so `0` is
 already what keeps the blur to the panels: this window covers the whole output,
 and everything outside the panels is fully transparent (verified — the desktop
 behind it stays sharp). Anything higher starts eating the panels themselves,
@@ -101,6 +153,8 @@ never fatal — the bar warns on stderr and uses the defaults.
   "clockFormat": "%H:%M",
   "userName": "",
   "userAvatar": "",
+  "toastTimeout": 6800,
+  "toastLimit": 3,
   "powerCommands": {
     "lock": "loginctl lock-session",
     "suspend": "systemctl suspend",
@@ -125,6 +179,11 @@ never fatal — the bar warns on stderr and uses the defaults.
 - `userAvatar` — the picture on that avatar, any format GdkPixbuf reads. Empty
   (the default) is `~/.face`; `~/` is expanded. Point it anywhere, or at nothing
   at all to keep the initial.
+- `toastTimeout` — how long a notification card stays up, in milliseconds, when
+  its sender asked for no timeout of its own. A sender that asked for one gets
+  it; a critical notification ignores both and stays.
+- `toastLimit` — how many cards may stack up before the oldest one leaves. It
+  only leaves the screen: it is still in the control centre's list.
 - `powerCommands` — one shell command per entry of the power menu, each merged on
   its own. `lock` goes through logind so whatever holds the session's lock handle
   answers it; `logout` is Hyprland's own exit, which leaves the teardown to
@@ -172,7 +231,9 @@ stale types with `rm -rf @girs && ags types -d .`.
 ## Icons
 
 `icons/` holds the bar's symbolic SVGs — Apple's SF Symbols, matching the rest of
-the desktop. They are bundled into the binary and written back out to
+the desktop, plus the bell and the cross, which are drawn to the same canvas and
+stroke because the set has no equivalent that could be exported. They are
+bundled into the binary and written back out to
 `$XDG_CACHE_HOME/struntuz-topbar/icons` at startup, because GTK only recolours an
 icon it loaded itself from a file whose name ends in `-symbolic.svg`. Nothing
 else has to change to replace one: overwrite the file and restart.
@@ -188,18 +249,19 @@ Two things have to hold for a file in there:
   as a solid blob and anything else (`line`, `polygon`, `ellipse`) keeps whatever
   colour it was drawn with. SF Symbols exports are outlines already; strip the
   guide and note layers the app adds.
-- **A shared 28×28 viewBox**, with each symbol's own scale kept and its ink
-  centred by moving the viewBox rather than the path. An SF Symbols export is
-  trimmed to its own bounds, and those differ per symbol — a chevron is 11×20
-  where a power glyph is 24×25. Normalising each to its own square would render
-  them all at the same size and undo the size relationships the set is drawn
-  with; a common canvas keeps them.
+- **A shared 24×24 viewBox**, with each symbol's own scale kept and its ink
+  centred on 12,12. An SF Symbols export is trimmed to its own bounds, and those
+  differ per symbol — a chevron is 11×20 where a power glyph is 24×25.
+  Normalising each to its own square would render them all at the same size and
+  undo the size relationships the set is drawn with; a common canvas keeps them.
+  `pixelSize` counts that box and not the glyph, so padding inside it is a
+  silent downscale of everything drawn there.
 
 ## Astal modules
 
 `flake.nix` seeds `astalLibsFor` with the libraries behind the current waybar
-setup: `io`, `astal4`, `hyprland`, `tray`, `mpris`, `network`, `wireplumber` and
-`battery`. Adding or removing one there covers both the package build and the dev
+setup, plus `notifd` for the notifications: `io`, `astal4`, `hyprland`,
+`notifd`, `tray`, `mpris`, `network`, `wireplumber` and `battery`. Adding or removing one there covers both the package build and the dev
 shell; regenerate `@girs` afterwards so the types follow.
 
 ## Install on NixOS

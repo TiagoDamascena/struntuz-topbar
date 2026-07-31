@@ -54,6 +54,19 @@ greeter.
 - **`lib/icons.ts`** — the bar's own symbolic SVGs, `inline:`-bundled from `icons/`
   and written back to `$XDG_CACHE_HOME/struntuz-topbar/icons` at startup, then
   registered with `Gtk.IconTheme.add_search_path`. Widgets only ever see a name.
+- **`lib/notifications.ts`** — the daemon side of the notifications. `AstalNotifd`
+  owns `org.freedesktop.Notifications`, so running this bar means no swaync/dunst
+  beside it (notifd falls back to proxying a foreign daemon and receives
+  nothing). It sets `ignoreTimeout` at startup — otherwise the daemon resolves
+  each notification when its sender's timeout runs out and the control centre's
+  list empties itself seconds after every arrival. The toasts therefore keep
+  their own timers and their own list: a card that times out only stops being
+  shown, and only `dismiss()` takes the notification out of the list. The
+  daemon's list is a hash table with second-resolution timestamps, so sorting it
+  needs the id as a tie-break.
+- **`lib/image.ts`** — one crop, shared by every round picture in the bar: the
+  centred square a `Gtk.Image` needs before a `border-radius` can read as a
+  circle.
 - **`lib/session.ts`** / **`lib/power.ts`** — who is logged in and what the power
   menu can do to that session. The actions are shell commands from the config,
   not calls: what "lock" means belongs to the session, not to a bar.
@@ -77,8 +90,8 @@ frames after a switch). Worth remembering for the items still to come.
 
 `flake.nix`'s `astalLibsFor` is the single list of Astal libraries, feeding both
 the package build and the dev shell. It currently carries `io`, `astal4`,
-`hyprland`, `tray`, `mpris`, `network`, `wireplumber` and `battery` — the sources
-behind the waybar setup this replaces. Adding one there also means regenerating
+`hyprland`, `notifd`, `tray`, `mpris`, `network`, `wireplumber` and `battery` —
+the sources behind the waybar setup this replaces, plus the notification daemon. Adding one there also means regenerating
 `@girs`.
 
 ### Non-obvious constraints
@@ -98,7 +111,10 @@ behind the waybar setup this replaces. Adding one there also means regenerating
   not decoration.
 - **GTK sizes `min-height` against the content box**, so a 1px border adds on top
   of it, while the design's CSS counts the border inside its 44px. `.pill`
-  subtracts the edge; measure with `hyprctl layers -j` after changing it.
+  subtracts the edge; measure with `hyprctl layers -j` after changing it. Padding
+  goes on top the same way, which is what turns a badge into a capsule: a 16px
+  `min-width` with 4px a side measures 24 and only the height stays 16, so
+  anything that has to come out a circle carries no padding at all.
 - **Labels of different font sizes don't share a baseline.** Each centres its own
   line box, so 16px beside 17px lands the baselines a pixel apart and reads as
   crooked; `valign`/`baselinePosition` do not fix it (verified on all four
@@ -141,7 +157,9 @@ behind the waybar setup this replaces. Adding one there also means regenerating
   picture is round because the `Gtk.Image` carries `overflow: HIDDEN`, which is
   what makes GTK4 clip a widget to its own rounded box. And a `Gtk.Image` scales
   a paintable to *fit*, so the texture has to arrive square or it letterboxes
-  inside the circle — `lib/session.ts` crops it before it reaches a widget.
+  inside the circle — `lib/image.ts` crops it before it reaches a widget, for
+  the avatar and for the notification disc alike. Passing a path as `file` skips
+  that crop, which is how the disc lost its circle the first time.
   `Gtk.Picture` with `contentFit: COVER` crops on its own but reports the image's
   intrinsic size as its natural size, which drags the pill out to the width of
   the photo; `pixelSize` on a `Gtk.Image` pins the measurement instead.
@@ -153,6 +171,20 @@ behind the waybar setup this replaces. Adding one there also means regenerating
   below* it, so `0` already spares the transparent scrim (verified — the desktop
   behind the open panel stays sharp), while anything higher eats into the panels
   and `1` kills the blur outright, since nothing here is fully opaque.
+- **A `scrolledwindow` takes its content through the `child` property, not as a
+  JSX child.** gnim's generic append path ends in `vfunc_add_child`, which for a
+  scrolled window parents the widget without telling it — GTK then measures a
+  child it does not know it has, and the whole column it sits in comes out
+  unallocated and invisible, with no warning anywhere. The `child` prop goes
+  through `set_child` and works. Watch for the same on any GTK4 widget that is
+  a bin rather than a container.
+- **A hand-drawn icon for `icons/` is stroked geometry turned into a filled
+  outline**, since GTK only recolours fills. Lines and arcs offset exactly (a
+  parallel line, a concentric arc), so the only real work is the corners: the
+  outer side of a turn gets a round join of the stroke's half width and the
+  inner side a chord. Which side is which follows the sign of the turn, and a
+  bell is a reminder that a silhouette that widens as it descends has *concave*
+  corners where the dome meets the flare and convex ones at the rim.
 - **A new source file must be `git add`ed before `nix build` sees it.** `src = ./.`
   on a flake only picks up files git knows about; an untracked widget fails the
   bundle with `Could not resolve`. The same goes for anything under `icons/`.

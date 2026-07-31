@@ -3,6 +3,9 @@
 $text: #e9e9ed;
 $text-dim: rgba(233, 233, 237, 0.6);
 $text-faint: rgba(233, 233, 237, 0.45);
+// Below the faint: what a timestamp and an empty list are set in. It is meant
+// to be read only when looked for, so it stays under the label it belongs to.
+$text-ghost: rgba(233, 233, 237, 0.32);
 // An icon at rest carries no weight to lean on the way type does, so it sits a
 // step above the dim the labels use.
 $icon-idle: rgba(233, 233, 237, 0.7);
@@ -75,7 +78,9 @@ window.background {
 
 // Nothing here is a GTK button as GTK draws one, so every part of that has to
 // be unset first: the theme brings a gradient, an edge and a minimum size of
-// its own to anything clickable.
+// its own to anything clickable. It brings bold type too, which stays here
+// because the power rows take it — a button that has to read as plain text says
+// `font-weight: normal` itself.
 %bare-button {
   min-width: 0;
   min-height: 0;
@@ -158,8 +163,29 @@ $clock-size: 16px;
   min-height: 44px;
 }
 
+// The two sizes a dismiss cross comes in: on a toast, where it is the card's
+// own control, and on a list row, where it only appears under the pointer.
+.icon-button.small {
+  min-width: 26px;
+  min-height: 26px;
+  color: $text-ghost;
+}
+
+.icon-button.tiny {
+  min-width: 22px;
+  min-height: 22px;
+  color: $text-ghost;
+}
+
 .icon-button:hover {
   background-color: $hover;
+  color: $text;
+}
+
+// The cross on a list row is already inside a row that lights up, so a second
+// lit shape under it would read as a button inside a button.
+.icon-button.tiny:hover {
+  background-color: transparent;
   color: $text;
 }
 
@@ -174,6 +200,26 @@ $clock-size: 16px;
 // with type carry — the circle brings its own edge distance.
 .icon-pill {
   padding: 0 5px;
+}
+
+// How many notifications are waiting, over the button that opens them. The
+// accent is the surface here and the text is the panel's own dark, which is the
+// one place in the bar where that pair is the right way round: a count has to
+// carry at 11px, and lit type that small does not.
+// A count is a disc, not a capsule — and padding is what took it off the
+// circle: GTK adds it outside the box `min-width` sets, the same way a border
+// adds onto `min-height` on `.pill`, so 4px a side made a 16px disc 24px wide.
+// Two digits still fit inside the 16; past that it stretches, which is the right
+// way for it to give.
+.badge {
+  min-width: 16px;
+  min-height: 16px;
+  padding: 0;
+  border-radius: $pill;
+  background-color: $accent;
+  color: #161826;
+  font-size: 11px;
+  font-weight: 500;
 }
 
 // The panels below the bar. They float in a window that covers the output, so
@@ -211,6 +257,193 @@ $clock-size: 16px;
 .user-status {
   font-size: 14px;
   color: $text-faint;
+}
+
+// The disc every notification wears, in the list and on a toast. It is the
+// accent's own tint rather than the neutral the power rows use: a notification
+// arrived from somewhere, and the colour is what says so at a glance.
+.notification-icon {
+  min-width: 34px;
+  min-height: 34px;
+  border-radius: $pill;
+  background-color: rgba(145, 132, 217, 0.2);
+  color: $accent-text;
+}
+
+.notification-icon.large {
+  min-width: 40px;
+  min-height: 40px;
+}
+
+// A picture fills the disc, so the tint under it would only show through the
+// corners the radius cuts off.
+.notification-icon.picture {
+  background-color: transparent;
+}
+
+.notifications {
+  padding: 14px 10px 10px;
+  // The empty state is a whole panel's worth of nothing, and the design gives
+  // it the same height it would have with rows in it, so the column below does
+  // not jump as the last one goes.
+  min-height: 190px;
+}
+
+// Same rule as the power menu's, on the same 10px of panel padding.
+.notifications-head {
+  padding: 0 8px 10px;
+  margin-bottom: 4px;
+  background-image: linear-gradient(
+    to right,
+    transparent 0%,
+    $divider 18%,
+    $divider 82%,
+    transparent 100%
+  );
+  background-size: 100% 1px;
+  background-position: bottom;
+  background-repeat: no-repeat;
+}
+
+.notifications-head-icon {
+  color: $text-faint;
+}
+
+.notifications-head-label {
+  font-size: 14px;
+  color: $text-dim;
+}
+
+.notifications-count {
+  font-size: 13px;
+  color: $accent-text;
+}
+
+// Plain type, not a button's: the theme's own bold and padding made this the
+// tallest thing in the head, so the divider under it sat 7px lower whenever
+// there was something to clear and jumped back up as the list emptied.
+.notifications-clear {
+  @extend %bare-button;
+  padding: 0 2px;
+  font-size: 13px;
+  font-weight: normal;
+  color: $text-faint;
+  transition: color 150ms ease;
+}
+
+.notifications-clear:hover {
+  color: $text;
+}
+
+.notifications-empty {
+  color: $text-ghost;
+  font-size: 15px;
+}
+
+// The list itself. GTK paints a background behind a scrolled view; the panel
+// under it is the one that should show.
+.notifications scrolledwindow {
+  background-color: transparent;
+}
+
+.notification-row {
+  padding: 11px 10px;
+  border-radius: 20px;
+  transition: background-color 150ms ease;
+}
+
+.notification-row:hover {
+  background-color: $row-hover;
+}
+
+.notification-title {
+  font-size: 15px;
+  font-weight: 500;
+}
+
+// The negative margin takes back the line gap Pango leaves between the two
+// labels, the way the power rows do: the pair reads as one block.
+.notification-body {
+  margin-top: -2px;
+  font-size: 13px;
+  color: $text-dim;
+}
+
+.notification-time {
+  font-size: 13px;
+  color: $text-ghost;
+}
+
+// A toast is the same card as a panel, one step smaller in the corner: it is
+// the only thing on that part of the screen, so it reads as an object rather
+// than as a section of the column the panels form.
+.toast {
+  border-radius: 26px;
+  padding: 13px 12px 12px 14px;
+}
+
+// The dismiss button is 9px taller than the line of type beside it, and a
+// vertical box spends that on both sides of the row — which is what put the
+// app's name in a band of its own instead of over the title it belongs to. The
+// row gives the height back, so the card is spaced by its type, not by a button.
+.toast-head {
+  margin-top: -4px;
+  margin-bottom: -4px;
+}
+
+.toast-app {
+  font-size: 13px;
+  color: $accent-text;
+}
+
+.toast-title {
+  font-size: 16px;
+  font-weight: 500;
+}
+
+// Same as the list rows: the line gap Pango leaves between the two labels comes
+// back off, so the title and what it says read as one block.
+.toast-body {
+  margin-top: -2px;
+  font-size: 14px;
+  color: $text-dim;
+}
+
+.toast-actions {
+  margin-top: 5px;
+}
+
+// The one outlined control in the bar. It has to read as pressable without a
+// fill, so it carries its edge where everything else leans on a tint.
+.toast-action {
+  @extend %bare-button;
+  min-height: 32px;
+  padding: 0 16px;
+  border: 1px solid $divider;
+  border-radius: $pill;
+  color: $text-dim;
+  font-size: 14px;
+  font-weight: 500;
+  transition:
+    background-color 150ms ease,
+    color 150ms ease;
+}
+
+.toast-action:hover {
+  background-color: $row-hover;
+  color: $text;
+}
+
+// The first action is the one the sender put first, which is the one it expects
+// to be taken; the accent marks it without filling it.
+.toast-action.primary {
+  border-color: rgba(145, 132, 217, 0.6);
+  color: $accent-text;
+}
+
+.toast-action.primary:hover {
+  background-color: $hover;
+  color: $accent-on;
 }
 
 .power-menu {

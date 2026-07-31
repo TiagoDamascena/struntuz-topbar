@@ -3,6 +3,8 @@ import { readFile, writeFile } from "ags/file"
 import GLib from "gi://GLib"
 
 import back from "inline:../icons/struntuz-back-symbolic.svg"
+import bell from "inline:../icons/struntuz-bell-symbolic.svg"
+import close from "inline:../icons/struntuz-close-symbolic.svg"
 import lock from "inline:../icons/struntuz-lock-symbolic.svg"
 import logout from "inline:../icons/struntuz-logout-symbolic.svg"
 import moon from "inline:../icons/struntuz-moon-symbolic.svg"
@@ -14,7 +16,9 @@ import sliders from "inline:../icons/struntuz-sliders-symbolic.svg"
 // knows whether the icon shipped with the bar or came from the user's theme.
 export const Icons = {
   back: "struntuz-back-symbolic",
+  close: "struntuz-close-symbolic",
   controlCenter: "struntuz-sliders-symbolic",
+  notification: "struntuz-bell-symbolic",
   lock: "struntuz-lock-symbolic",
   logout: "struntuz-logout-symbolic",
   power: "struntuz-power-symbolic",
@@ -24,7 +28,9 @@ export const Icons = {
 
 const SOURCES: Record<string, string> = {
   [Icons.back]: back,
+  [Icons.close]: close,
   [Icons.controlCenter]: sliders,
+  [Icons.notification]: bell,
   [Icons.lock]: lock,
   [Icons.logout]: logout,
   [Icons.power]: power,
@@ -67,4 +73,11 @@ export function installIcons(): void {
   // A search path is scanned for loose icons as well as for themes, so the flat
   // directory above is enough — no index.theme, no size subdirectories.
   Gtk.IconTheme.get_for_display(display).add_search_path(DIR)
+}
+
+// Whether the theme can draw a name at all. GTK answers a missing icon with the
+// broken-image glyph, which says less than the bar's own fallback does.
+export function hasIcon(name: string): boolean {
+  const display = Gdk.Display.get_default()
+  return display ? Gtk.IconTheme.get_for_display(display).has_icon(name) : false
 }

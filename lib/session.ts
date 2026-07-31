@@ -3,9 +3,9 @@ import { Gdk } from "ags/gtk4"
 import { readFile } from "ags/file"
 import { createPoll } from "ags/time"
 import AstalBattery from "gi://AstalBattery"
-import GdkPixbuf from "gi://GdkPixbuf"
 import GLib from "gi://GLib"
 import { getConfig } from "./config"
+import { squareTexture } from "./image"
 import { t } from "./i18n"
 
 // `g_get_real_name` answers "Unknown" rather than failing when the GECOS field
@@ -30,34 +30,14 @@ function avatarPath(): string {
   return configured.startsWith("~/") ? `${GLib.get_home_dir()}/${configured.slice(2)}` : configured
 }
 
-// Cropped to a centred square and scaled here rather than at render time,
-// because a `Gtk.Image` scales a paintable to *fit*: anything but a square would
-// letterbox inside the circle instead of filling it. `.face` is square by
-// convention, not by rule.
-//
-// `size` is the avatar in logical pixels; the texture is cut at twice that, so
-// it still has pixels to give on a scaled display without carrying a whole
-// portrait around.
+// Cropped square rather than drawn as it comes: `.face` is square by convention,
+// not by rule, and the pill's circle needs it to be one.
 export function userAvatar(size: number): Gdk.Texture | null {
   const path = avatarPath()
   if (!GLib.file_test(path, GLib.FileTest.EXISTS)) return null
 
-  try {
-    const picture = GdkPixbuf.Pixbuf.new_from_file(path)
-    const side = Math.min(picture.get_width(), picture.get_height())
-    const square = picture.new_subpixbuf(
-      Math.floor((picture.get_width() - side) / 2),
-      Math.floor((picture.get_height() - side) / 2),
-      side,
-      side,
-    )
-    const scaled = square.scale_simple(size * 2, size * 2, GdkPixbuf.InterpType.BILINEAR)
-    return scaled && Gdk.Texture.new_for_pixbuf(scaled)
-  } catch (err) {
-    // Never worth losing the pill over: the initial says the same thing.
-    console.warn(`struntuz-topbar: ignoring avatar at ${path}: ${err}`)
-    return null
-  }
+  // The initial says the same thing when the file turns out not to be an image.
+  return squareTexture(path, size)
 }
 
 function hhmm(seconds: number): string {

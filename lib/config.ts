@@ -18,6 +18,8 @@ export interface Config {
   clockFormat: string
   userName: string
   userAvatar: string
+  toastTimeout: number
+  toastLimit: number
   powerCommands: PowerCommands
 }
 
@@ -37,6 +39,11 @@ export const DEFAULTS: Config = {
   // Empty: `~/.face`, where the desktop conventionally keeps the picture. A
   // missing file is not an error — the avatar falls back to the initial.
   userAvatar: "",
+  // How long a toast stays up, in milliseconds, when its sender asks for no
+  // timeout of its own. The design's own hold.
+  toastTimeout: 6800,
+  // How far down the screen the stack may reach before the oldest card goes.
+  toastLimit: 3,
   powerCommands: {
     lock: "loginctl lock-session",
     suspend: "systemctl suspend",
@@ -50,6 +57,12 @@ export const DEFAULTS: Config = {
 
 function str(value: unknown, fallback: string): string {
   return typeof value === "string" ? value : fallback
+}
+
+// Only finite non-negative numbers: a NaN or an Infinity here would reach a
+// timer, and a negative count would empty the toast stack on arrival.
+function num(value: unknown, fallback: number): number {
+  return typeof value === "number" && Number.isFinite(value) && value >= 0 ? value : fallback
 }
 
 function powerCommands(raw: unknown): PowerCommands {
@@ -74,6 +87,8 @@ function merge(raw: Record<string, unknown>): Config {
     clockFormat: str(raw.clockFormat, DEFAULTS.clockFormat),
     userName: str(raw.userName, DEFAULTS.userName),
     userAvatar: str(raw.userAvatar, DEFAULTS.userAvatar),
+    toastTimeout: num(raw.toastTimeout, DEFAULTS.toastTimeout),
+    toastLimit: num(raw.toastLimit, DEFAULTS.toastLimit),
     powerCommands: powerCommands(raw.powerCommands),
   }
 }
