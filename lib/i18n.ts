@@ -6,15 +6,79 @@ export interface Strings {
   // weekday and month names, never the order they go in. `config.dateFormat`
   // overrides it.
   dateFormat: string
+
+  controlCenter: string
+  back: string
+
+  battery: string
+  batteryLeft: string
+  batteryCharging: string
+  uptime: string
+
+  power: string
+  powerLock: string
+  powerLockMeta: string
+  powerSuspend: string
+  powerSuspendMeta: string
+  powerLogout: string
+  // `%d` is the number of open windows the session takes with it.
+  powerLogoutMeta: string
+  powerLogoutMetaOne: string
+  powerRestart: string
+  powerRestartMeta: string
+  powerShutdown: string
+  powerShutdownMeta: string
 }
 
 // The base every other language falls back to, key by key.
 const EN: Strings = {
   dateFormat: "%a, %b %-d",
+
+  controlCenter: "Control Center",
+  back: "Back",
+
+  battery: "Battery",
+  batteryLeft: "left",
+  batteryCharging: "charging",
+  uptime: "Uptime",
+
+  power: "Power",
+  powerLock: "Lock",
+  powerLockMeta: "Screen locks now",
+  powerSuspend: "Suspend",
+  powerSuspendMeta: "Sleep to RAM",
+  powerLogout: "Log out",
+  powerLogoutMeta: "%d windows will close",
+  powerLogoutMetaOne: "1 window will close",
+  powerRestart: "Restart",
+  powerRestartMeta: "Closes everything",
+  powerShutdown: "Shut down",
+  powerShutdownMeta: "Powers off the machine",
 }
 
 const PT_BR: Partial<Strings> = {
   dateFormat: "%a, %-d de %b",
+
+  controlCenter: "Central de controle",
+  back: "Voltar",
+
+  battery: "Bateria",
+  batteryLeft: "restantes",
+  batteryCharging: "carregando",
+  uptime: "Ativo há",
+
+  power: "Energia",
+  powerLock: "Bloquear",
+  powerLockMeta: "A tela bloqueia agora",
+  powerSuspend: "Suspender",
+  powerSuspendMeta: "Dormir na memória",
+  powerLogout: "Encerrar sessão",
+  powerLogoutMeta: "%d janelas serão fechadas",
+  powerLogoutMetaOne: "1 janela será fechada",
+  powerRestart: "Reiniciar",
+  powerRestartMeta: "Fecha tudo",
+  powerShutdown: "Desligar",
+  powerShutdownMeta: "Desliga a máquina",
 }
 
 const CATALOG: Record<string, Partial<Strings>> = {

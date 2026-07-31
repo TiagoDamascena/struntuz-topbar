@@ -1,10 +1,24 @@
 import { readFile } from "ags/file"
 import GLib from "gi://GLib"
 
+// One shell command per power action. They are commands rather than built-in
+// calls because the right one is the session's, not the bar's: this session
+// locks through logind (hypridle holds the handle), another may not.
+export interface PowerCommands {
+  lock: string
+  suspend: string
+  logout: string
+  restart: string
+  shutdown: string
+}
+
 export interface Config {
   language: string
   dateFormat: string
   clockFormat: string
+  userName: string
+  userAvatar: string
+  powerCommands: PowerCommands
 }
 
 // User config; `STRUNTUZ_TOPBAR_CONFIG` overrides it (useful in development).
@@ -18,10 +32,36 @@ export const DEFAULTS: Config = {
   // Empty: the language's own pattern (lib/i18n.ts) unless overridden here.
   dateFormat: "",
   clockFormat: "%H:%M",
+  // Empty: the account's own name (lib/session.ts).
+  userName: "",
+  // Empty: `~/.face`, where the desktop conventionally keeps the picture. A
+  // missing file is not an error — the avatar falls back to the initial.
+  userAvatar: "",
+  powerCommands: {
+    lock: "loginctl lock-session",
+    suspend: "systemctl suspend",
+    // Hyprland's own exit, so whatever supervises the session — uwsm, a systemd
+    // unit, a bare exec — tears down after it rather than under it.
+    logout: "hyprctl dispatch exit",
+    restart: "systemctl reboot",
+    shutdown: "systemctl poweroff",
+  },
 }
 
 function str(value: unknown, fallback: string): string {
   return typeof value === "string" ? value : fallback
+}
+
+function powerCommands(raw: unknown): PowerCommands {
+  const from = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {}
+  const defaults = DEFAULTS.powerCommands
+  return {
+    lock: str(from.lock, defaults.lock),
+    suspend: str(from.suspend, defaults.suspend),
+    logout: str(from.logout, defaults.logout),
+    restart: str(from.restart, defaults.restart),
+    shutdown: str(from.shutdown, defaults.shutdown),
+  }
 }
 
 // Per-key merge over the defaults: unknown keys are ignored and a bad value
@@ -32,6 +72,9 @@ function merge(raw: Record<string, unknown>): Config {
     language: str(raw.language, DEFAULTS.language),
     dateFormat: str(raw.dateFormat, DEFAULTS.dateFormat),
     clockFormat: str(raw.clockFormat, DEFAULTS.clockFormat),
+    userName: str(raw.userName, DEFAULTS.userName),
+    userAvatar: str(raw.userAvatar, DEFAULTS.userAvatar),
+    powerCommands: powerCommands(raw.powerCommands),
   }
 }
 

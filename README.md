@@ -5,13 +5,32 @@ A Wayland top bar built with [AGS/Astal](https://aylur.github.io/ags/) (TypeScri
 [struntuz-greet](https://github.com/tiagodamascena/struntuz-greet) and it ships as
 a flake.
 
-At this point the bar carries the workspace selector and the clock; the rest of
-the design follows one item at a time.
+At this point the bar carries the workspace selector, the clock and the control
+centre; the rest of the design follows one item at a time.
 
 Workspaces are a fixed 1–9, as the waybar this replaces shows them, and keep that
 bar's Catppuccin colours per state: mauve for the focused one, subtext0 where
 windows are open, surface1 for the empty ones and pink on hover. The focused dot
 stretches into a bar, and the change is animated.
+
+## Control centre
+
+The button at the right end of the bar drops a panel below it. It carries the
+user pill for now — avatar, name, and the battery, or `user@host` on a machine
+without one — and the power button on it opens the power menu: lock, suspend,
+log out, restart, shut down.
+
+The avatar is the picture at `~/.face`, cropped to a centred square and rounded
+off. Without one it falls back to the initial of the name, as the design draws
+it; a file that is missing or unreadable is never an error.
+
+The panel is a window of its own, covering the whole output: the empty part of
+it is what catches the click that dismisses it, so anywhere outside the panel
+closes it, as does <kbd>Esc</kbd> once the window has the keyboard. Each monitor
+gets its own, opened by its own bar.
+
+Each entry runs a shell command from `powerCommands` (see below), so what
+"lock" means is the session's business and not the bar's.
 
 ## Blur
 
@@ -48,6 +67,26 @@ render, just flat over the wallpaper. To try it before committing to a rebuild,
 `hyprctl keyword layerrule blur,struntuz-topbar` applies it until the next
 `hyprctl reload`.
 
+The control centre is a second window with its own namespace, and it needs its
+own rule — the same shape as the one above:
+
+```
+layerrule {
+  name=struntuz-control-center-blur
+  blur=on
+  ignore_alpha=0
+  match:namespace=struntuz-control-center
+}
+```
+
+`ignore_alpha` matters more here than it does on the bar, and it has to stay at
+`0`. Hyprland reads it as "skip the pixels at or below this alpha", so `0` is
+already what keeps the blur to the panels: this window covers the whole output,
+and everything outside the panels is fully transparent (verified — the desktop
+behind it stays sharp). Anything higher starts eating the panels themselves,
+and at `1` nothing is opaque enough to survive, so the blur disappears
+entirely.
+
 ## Configuration
 
 The bar reads `$XDG_CONFIG_HOME/struntuz-topbar/config.json` (usually
@@ -59,7 +98,16 @@ never fatal — the bar warns on stderr and uses the defaults.
 {
   "language": "",
   "dateFormat": "",
-  "clockFormat": "%H:%M"
+  "clockFormat": "%H:%M",
+  "userName": "",
+  "userAvatar": "",
+  "powerCommands": {
+    "lock": "loginctl lock-session",
+    "suspend": "systemctl suspend",
+    "logout": "hyprctl dispatch exit",
+    "restart": "systemctl reboot",
+    "shutdown": "systemctl poweroff"
+  }
 }
 ```
 
@@ -71,6 +119,16 @@ never fatal — the bar warns on stderr and uses the defaults.
   the month and weekday names, but not the order they go in, so English gets
   `%a, %b %-d` ("Thu, Jul 30") and pt-BR `%a, %-d de %b` ("qui, 30 de jul").
 - `clockFormat` — the time, same format strings.
+- `userName` — the name on the control centre's user pill, and the initial its
+  avatar falls back to. Empty (the default) takes the account's real name, then
+  its login.
+- `userAvatar` — the picture on that avatar, any format GdkPixbuf reads. Empty
+  (the default) is `~/.face`; `~/` is expanded. Point it anywhere, or at nothing
+  at all to keep the initial.
+- `powerCommands` — one shell command per entry of the power menu, each merged on
+  its own. `lock` goes through logind so whatever holds the session's lock handle
+  answers it; `logout` is Hyprland's own exit, which leaves the teardown to
+  whatever supervises the session. Under uwsm, `uwsm stop` is the tidier logout.
 
 Set `STRUNTUZ_TOPBAR_CONFIG` to read a config from somewhere else — handy for
 iterating without touching `~/.config`:
@@ -110,6 +168,32 @@ nix build
 
 After `nix flake update`, re-enter the dev shell to repoint the symlinks; refresh
 stale types with `rm -rf @girs && ags types -d .`.
+
+## Icons
+
+`icons/` holds the bar's symbolic SVGs — Apple's SF Symbols, matching the rest of
+the desktop. They are bundled into the binary and written back out to
+`$XDG_CACHE_HOME/struntuz-topbar/icons` at startup, because GTK only recolours an
+icon it loaded itself from a file whose name ends in `-symbolic.svg`. Nothing
+else has to change to replace one: overwrite the file and restart.
+
+SF Symbols are Apple's, licensed for use on their platforms and not for
+redistribution, so they are a poor fit for a public repository however well they
+suit the design.
+
+Two things have to hold for a file in there:
+
+- **Filled shapes only** — `path`, `rect` or `circle`. GTK recolours a symbolic
+  icon by forcing `fill` on exactly those three, so a stroked outline comes out
+  as a solid blob and anything else (`line`, `polygon`, `ellipse`) keeps whatever
+  colour it was drawn with. SF Symbols exports are outlines already; strip the
+  guide and note layers the app adds.
+- **A shared 28×28 viewBox**, with each symbol's own scale kept and its ink
+  centred by moving the viewBox rather than the path. An SF Symbols export is
+  trimmed to its own bounds, and those differ per symbol — a chevron is 11×20
+  where a power glyph is 24×25. Normalising each to its own square would render
+  them all at the same size and undo the size relationships the set is drawn
+  with; a common canvas keeps them.
 
 ## Astal modules
 

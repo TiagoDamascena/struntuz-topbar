@@ -2,7 +2,20 @@
 // the glass below is the greeter's, so login and desktop read as one system.
 $text: #e9e9ed;
 $text-dim: rgba(233, 233, 237, 0.6);
+$text-faint: rgba(233, 233, 237, 0.45);
+// An icon at rest carries no weight to lean on the way type does, so it sits a
+// step above the dim the labels use.
+$icon-idle: rgba(233, 233, 237, 0.7);
 $accent: #9184d9;
+// The accent read as text and as a lit surface: the design never puts the
+// accent itself on type, only these two lifts of it.
+$accent-text: #b5abfc;
+$accent-on: #e7e5fe;
+// Two hovers, because the two shapes have different jobs. A round button lights
+// up in the accent; a full-width row only has to separate from the panel under
+// it, and an accent that wide would read as a selection.
+$hover: rgba(145, 132, 217, 0.24);
+$row-hover: rgba(233, 233, 237, 0.07);
 
 // Nothing paints the strip itself: every bar element is its own floating pill.
 // The fill stays thin so a pill reads as a tint of what is behind it rather than
@@ -12,8 +25,19 @@ $accent: #9184d9;
 // without the layerrule the pills are merely translucent.
 $pill-bg: rgba(22, 24, 38, 0.34);
 $pill-edge: rgba(233, 233, 237, 0.09);
+// The rule inside a panel, which fades out at both ends and so needs a stronger
+// middle than the edge that runs all the way round a shape.
+$divider: rgba(233, 233, 237, 0.16);
 $pill-height: 44px;
 $pill: 999px;
+
+// Much heavier than $pill-bg, and not because the design says so — it steps
+// only .55 to .62. What a bar pill sits on is the wallpaper; what a panel sits
+// on is whatever window is open under it, at whatever brightness. The pill's
+// thin tint disappeared over a light title bar (verified against a browser),
+// and the fill has to hold the type on its own wherever the panel lands.
+$panel-bg: rgba(22, 24, 38, 0.72);
+$panel-radius: 28px;
 
 // The workspace dots keep the palette of the waybar this replaces (Catppuccin
 // Mocha) rather than the design's single accent, so the states stay the colours
@@ -49,20 +73,29 @@ window.background {
   background-color: $pill-bg;
 }
 
+// Nothing here is a GTK button as GTK draws one, so every part of that has to
+// be unset first: the theme brings a gradient, an edge and a minimum size of
+// its own to anything clickable.
+%bare-button {
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background-image: none;
+  background-color: transparent;
+  box-shadow: none;
+  outline: none;
+}
+
 .workspaces {
   padding: 0 18px;
 }
 
-// A plain coloured shape, so every part of GTK's own button styling has to be
-// unset — the theme brings a gradient, an edge and a minimum size of its own.
 .dot {
+  @extend %bare-button;
   min-width: 8px;
   min-height: 8px;
-  padding: 0;
-  border: 0;
   border-radius: $pill;
-  background-image: none;
-  box-shadow: none;
   transition:
     min-width 220ms cubic-bezier(0.2, 0.8, 0.2, 1),
     background-color 220ms ease;
@@ -104,4 +137,169 @@ $clock-size: 16px;
   font-size: $clock-size;
   font-weight: 500;
   letter-spacing: 0.01em;
+}
+
+// A round icon button: the bar's control-centre toggle, the power button in the
+// user pill, the back arrow in the power menu. The icon is a symbolic SVG, so
+// `color` is what paints it.
+.icon-button {
+  @extend %bare-button;
+  min-width: 34px;
+  min-height: 34px;
+  border-radius: $pill;
+  color: $icon-idle;
+  transition:
+    background-color 150ms ease,
+    color 150ms ease;
+}
+
+.icon-button.large {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.icon-button:hover {
+  background-color: $hover;
+  color: $text;
+}
+
+// Held open, not hovered: the toggle stays lit for as long as the panel it
+// opened is on screen.
+.icon-button.open {
+  background-color: rgba(145, 132, 217, 0.3);
+  color: $accent-on;
+}
+
+// The pill around a lone round button is 5px of padding, not the 18–20 the ones
+// with type carry — the circle brings its own edge distance.
+.icon-pill {
+  padding: 0 5px;
+}
+
+// The panels below the bar. They float in a window that covers the output, so
+// nothing paints between them either.
+.panel {
+  border: 1px solid $pill-edge;
+  border-radius: $panel-radius;
+  background-color: $panel-bg;
+}
+
+.user {
+  // The one panel that is still a capsule — it holds a single row, so the
+  // design keeps it the shape of the bar above it.
+  border-radius: $pill;
+  // Taller than a bar pill: two lines of type beside a 42px avatar.
+  min-height: 64px;
+  padding: 0 10px 0 14px;
+}
+
+.avatar {
+  min-width: 42px;
+  min-height: 42px;
+  border-radius: $pill;
+  background-color: rgba(145, 132, 217, 0.28);
+  color: $accent-on;
+  font-size: 17px;
+  font-weight: 500;
+}
+
+.user-name {
+  font-size: 17px;
+  font-weight: 500;
+}
+
+.user-status {
+  font-size: 14px;
+  color: $text-faint;
+}
+
+.power-menu {
+  padding: 8px 10px 10px;
+}
+
+// The rule is a background, not a border, because a border cannot carry a
+// gradient. It lines up with the rows below it, not with the panel: both sit on
+// the panel's 10px of side padding. Stronger than `$pill-edge` on purpose — the
+// ends fade out, so a hairline at the panel's own alpha would read as nothing.
+.power-head {
+  padding: 6px 4px 11px;
+  margin-bottom: 8px;
+  background-image: linear-gradient(
+    to right,
+    transparent 0%,
+    $divider 18%,
+    $divider 82%,
+    transparent 100%
+  );
+  background-size: 100% 1px;
+  background-position: bottom;
+  background-repeat: no-repeat;
+}
+
+.power-title {
+  font-size: 17px;
+  font-weight: 500;
+}
+
+.power-subtitle {
+  font-size: 13px;
+  color: $accent-text;
+}
+
+.power-row {
+  @extend %bare-button;
+  min-height: 54px;
+  // Less than the 12 a bare glyph needed: the icon disc brings its own edge
+  // distance, the way `.icon-pill` does on the bar.
+  padding: 0 10px;
+  // Not the pill radius: a row this wide reads as a shape, and the design keeps
+  // it a rounded rectangle so only the panel around it is a capsule.
+  border-radius: 20px;
+  color: $text;
+  transition: background-color 150ms ease;
+}
+
+.power-row:hover {
+  background-color: $row-hover;
+}
+
+// A disc under each glyph, so the icons line up as one column of shapes rather
+// than as four outlines of different weights. It has to out-tint the row hover
+// it sits on, or it disappears under the pointer.
+.power-row-icon {
+  min-width: 34px;
+  min-height: 34px;
+  border-radius: $pill;
+  background-color: rgba(233, 233, 237, 0.12);
+  color: rgba(233, 233, 237, 0.7);
+}
+
+.power-row-label {
+  font-size: 15px;
+  font-weight: 500;
+}
+
+// The button element is bold in Adwaita and the weight is inherited, so a
+// secondary line has to say so itself. The negative margin takes back the line
+// gap Pango leaves between the two boxes — the pair reads as one block.
+.power-row-meta {
+  margin-top: -3px;
+  font-size: 13px;
+  font-weight: 400;
+  color: $text-faint;
+}
+
+// Shutting down is the only row that is already lit, so the accent marks it
+// before the pointer gets there.
+.power-row.primary {
+  background-color: rgba(145, 132, 217, 0.16);
+}
+
+.power-row.primary:hover {
+  background-color: rgba(145, 132, 217, 0.26);
+}
+
+.power-row.primary .power-row-icon {
+  background-color: rgba(145, 132, 217, 0.32);
+  color: $accent-on;
 }
