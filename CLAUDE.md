@@ -209,13 +209,13 @@ the sources behind the waybar setup this replaces, plus the notification daemon.
   unallocated and invisible, with no warning anywhere. The `child` prop goes
   through `set_child` and works. Watch for the same on any GTK4 widget that is
   a bin rather than a container.
-- **A hand-drawn icon for `icons/` is stroked geometry turned into a filled
-  outline**, since GTK only recolours fills. Lines and arcs offset exactly (a
-  parallel line, a concentric arc), so the only real work is the corners: the
-  outer side of a turn gets a round join of the stroke's half width and the
-  inner side a chord. Which side is which follows the sign of the turn, and a
-  bell is a reminder that a silhouette that widens as it descends has *concave*
-  corners where the dome meets the flare and convex ones at the rim.
+- **Never draw an icon. Ask the user for it.** `icons/` is one set with its own
+  size relationships (below), and a glyph invented to fill a gap sits beside
+  them rather than in them — it reads as the odd one out however carefully it is
+  constructed. When a new item needs an icon, name the symbol it wants and stop
+  there; the user exports it. The same goes for a variant of one already here (a
+  crossed-out bell for a bell), which is a second glyph and not an edit of the
+  first.
 - **A new source file must be `git add`ed before `nix build` sees it.** `src = ./.`
   on a flake only picks up files git knows about; an untracked widget fails the
   bundle with `Could not resolve`. The same goes for anything under `icons/`.
