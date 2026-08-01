@@ -15,6 +15,9 @@ NixOS the whole thing is one `enable = true`.
   power menu: lock, suspend, log out, restart, shut down.
 - **Notifications** — the bar is the session's notification daemon. Cards appear
   in the corner and stay in the control centre's list until cleared.
+- **Do not disturb** — one switch in the control centre. Cards stop appearing and
+  the badge comes off the bar; what arrives still goes to the list, so nothing is
+  lost. The switch is remembered across restarts.
 
 Localized in English and Brazilian Portuguese, following the session's locale by
 default.

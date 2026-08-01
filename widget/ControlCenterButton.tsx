@@ -1,14 +1,17 @@
 import { Gtk } from "ags/gtk4"
-import { Accessor } from "ags"
+import { Accessor, createComputed } from "ags"
 import { Icons } from "../lib/icons"
-import { notificationCount } from "../lib/notifications"
+import { dontDisturb, notificationCount } from "../lib/notifications"
 import { t } from "../lib/i18n"
 
 export default function ControlCenterButton(props: {
   open: Accessor<boolean>
   onToggle: () => void
 }) {
-  const count = notificationCount()
+  // Do-not-disturb takes the count off the bar as well as the cards off the
+  // screen, the way the design does: a badge is an interruption of its own, and
+  // what is waiting is still there to be found in the panel.
+  const count = createComputed([notificationCount(), dontDisturb()], (n, quiet) => (quiet ? 0 : n))
 
   return (
     <overlay>

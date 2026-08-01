@@ -4,6 +4,7 @@ import { Accessor, createState } from "ags"
 import { Icons } from "../lib/icons"
 import { batteryStatus, userAvatar, userInitial, userName } from "../lib/session"
 import { t } from "../lib/i18n"
+import DoNotDisturb from "./DoNotDisturb"
 import Notifications from "./Notifications"
 import PowerMenu from "./PowerMenu"
 
@@ -107,6 +108,12 @@ export default function ControlCenter(props: {
           marginEnd={PANEL_SIDE}
         >
           <UserPill visible={main} onPower={() => setMenu(true)} />
+          {/* Where the design's tile grid goes, between the user pill and the
+              notifications. It is two columns there and this is the first tile
+              of it, so until it has a neighbour it takes the whole width —
+              half a row of tile beside half a row of nothing reads as a
+              missing widget, not as a grid waiting to fill. */}
+          <DoNotDisturb visible={main} />
           <Notifications visible={main} />
           <PowerMenu visible={menu} onBack={() => setMenu(false)} onRun={dismiss} />
         </box>

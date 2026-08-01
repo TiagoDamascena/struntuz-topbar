@@ -63,7 +63,9 @@ greeter.
   their own timers and their own list: a card that times out only stops being
   shown, and only `dismiss()` takes the notification out of the list. The
   daemon's list is a hash table with second-resolution timestamps, so sorting it
-  needs the id as a tie-break.
+  needs the id as a tie-break. Do-not-disturb is the daemon's `dontDisturb`
+  rather than a state of this module's, so a notification that arrives with
+  nothing on screen is silenced by the same value the tile reads.
 - **`lib/image.ts`** — one crop, shared by every round picture in the bar: the
   centred square a `Gtk.Image` needs before a `border-radius` can read as a
   circle.
@@ -110,6 +112,14 @@ the sources behind the waybar setup this replaces, plus the notification daemon.
 - **Do not enable `experimentalDecorators`** in tsconfig. gnim uses TC39 decorators
   with metadata; the legacy mode breaks AGS's D-Bus (`TypeError: meta is undefined`).
   `skipLibCheck: true` is required to silence gtk3-vs-gtk4 duplicate types in `@girs`.
+- **Notifd's state outlives the process, in dconf.** `dont-disturb`,
+  `ignore-timeout` and the notifications themselves are GSettings keys under
+  `io.astal.notifd` — the property docs say `dont-disturb` is "merely a value
+  shared between the daemon process and proxies", which reads as runtime-only and
+  is not. So a `dontDisturb = true` left behind by a test run silences the *next*
+  run too, with no toast, no badge and nothing in the log to say why. Read it back
+  with `dconf read /io/astal/notifd/dont-disturb` before debugging anything about
+  notifications not arriving, and reset with `dconf write … false`.
 - **The blur behind the pills is the compositor's, not GTK's.** `backdrop-filter`
   blurs what is painted below it inside the same window; the bar's window is
   transparent, so the property is inert here (verified: it was in the CSS and

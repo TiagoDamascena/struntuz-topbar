@@ -4,6 +4,7 @@ import GLib from "gi://GLib"
 
 import back from "inline:../icons/struntuz-back-symbolic.svg"
 import bell from "inline:../icons/struntuz-bell-symbolic.svg"
+import bellSlash from "inline:../icons/struntuz-bell-slash-symbolic.svg"
 import close from "inline:../icons/struntuz-close-symbolic.svg"
 import lock from "inline:../icons/struntuz-lock-symbolic.svg"
 import logout from "inline:../icons/struntuz-logout-symbolic.svg"
@@ -19,6 +20,7 @@ export const Icons = {
   close: "struntuz-close-symbolic",
   controlCenter: "struntuz-sliders-symbolic",
   notification: "struntuz-bell-symbolic",
+  notificationOff: "struntuz-bell-slash-symbolic",
   lock: "struntuz-lock-symbolic",
   logout: "struntuz-logout-symbolic",
   power: "struntuz-power-symbolic",
@@ -31,6 +33,7 @@ const SOURCES: Record<string, string> = {
   [Icons.close]: close,
   [Icons.controlCenter]: sliders,
   [Icons.notification]: bell,
+  [Icons.notificationOff]: bellSlash,
   [Icons.lock]: lock,
   [Icons.logout]: logout,
   [Icons.power]: power,

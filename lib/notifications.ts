@@ -29,6 +29,25 @@ export function startNotifications(): void {
   notifd().ignoreTimeout = true
 }
 
+// Do-not-disturb lives on the daemon rather than in a state of this module's
+// own, so a notification that arrives while nothing is on screen is silenced by
+// the same value the control centre's tile reads. Notifd keeps it in GSettings
+// (`io.astal.notifd dont-disturb`, beside `ignore-timeout` and the notifications
+// themselves), so it survives a restart of the bar — which is what you want from
+// a switch you left on, and the tile is there to say it is still on.
+export function dontDisturb(): Accessor<boolean> {
+  return createBinding(notifd(), "dontDisturb")
+}
+
+export function toggleDontDisturb(): void {
+  const daemon = notifd()
+  daemon.dontDisturb = !daemon.dontDisturb
+
+  // Turning it on clears the screen now, as in the design — the point of the
+  // switch is the quiet it brings, not the quiet after the next arrival.
+  if (daemon.dontDisturb) toastStack().clear()
+}
+
 // Newest first, which is the order both the toasts and the list read in. The
 // daemon keeps them in a hash table, so its own order is arbitrary — and the
 // timestamps are whole seconds, which a burst from one app shares, hence the id
@@ -111,10 +130,17 @@ function holdFor(n: Notification): number {
   return n.expireTimeout > 0 ? n.expireTimeout : getConfig().toastTimeout
 }
 
+interface ToastStack {
+  list: Accessor<Notification[]>
+  // Takes the cards off the screen without resolving anything: what they were
+  // showing is still in the control centre's list.
+  clear: () => void
+}
+
 // The toasts are their own list, not a window over the daemon's: a toast that
 // times out only stops being shown, and the notification behind it stays in the
 // control centre until something resolves it.
-function createToasts(): Accessor<Notification[]> {
+function createToasts(): ToastStack {
   const daemon = notifd()
   const [list, setList] = createState<Notification[]>([])
   const timers = new Map<number, Timer>()
@@ -152,13 +178,23 @@ function createToasts(): Accessor<Notification[]> {
 
   daemon.connect("resolved", (_daemon, id) => hide(id))
 
-  return list
+  return {
+    list,
+    clear() {
+      for (const n of list.get()) drop(n.id)
+      setList([])
+    },
+  }
 }
 
-let toastList: Accessor<Notification[]> | null = null
+let stack: ToastStack | null = null
 
 // One stack for the whole session, however many monitors ask for it.
+function toastStack(): ToastStack {
+  if (!stack) stack = createToasts()
+  return stack
+}
+
 export function toasts(): Accessor<Notification[]> {
-  if (!toastList) toastList = createToasts()
-  return toastList
+  return toastStack().list
 }

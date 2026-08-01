@@ -10,6 +10,10 @@ export interface Strings {
   controlCenter: string
   back: string
 
+  doNotDisturb: string
+  doNotDisturbOn: string
+  doNotDisturbOff: string
+
   notifications: string
   notificationsClear: string
   notificationsEmpty: string
@@ -47,6 +51,10 @@ const EN: Strings = {
   controlCenter: "Control Center",
   back: "Back",
 
+  doNotDisturb: "Do Not Disturb",
+  doNotDisturbOn: "On",
+  doNotDisturbOff: "Off",
+
   notifications: "Notifications",
   notificationsClear: "Clear all",
   notificationsEmpty: "Nothing new",
@@ -80,6 +88,10 @@ const PT_BR: Partial<Strings> = {
 
   controlCenter: "Central de controle",
   back: "Voltar",
+
+  doNotDisturb: "Não perturbe",
+  doNotDisturbOn: "Ligado",
+  doNotDisturbOff: "Desligado",
 
   notifications: "Notificações",
   notificationsClear: "Limpar tudo",

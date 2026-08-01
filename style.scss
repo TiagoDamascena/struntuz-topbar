@@ -259,6 +259,83 @@ $clock-size: 16px;
   color: $text-faint;
 }
 
+// A toggle tile: the panel's shape carrying a state rather than a section. It
+// keeps the capsule the user pill above it has — a tile holds one row too — and
+// lights up in the accent when what it switches is on.
+.tile {
+  @extend %bare-button;
+  // 72px in the design, less the edge GTK adds on top of the content box.
+  min-height: 70px;
+  // The disc brings its own edge distance on the left, the way `.power-row` and
+  // `.icon-pill` do; the type on the right does not.
+  padding: 0 14px 0 10px;
+  border: 1px solid $pill-edge;
+  border-radius: $pill;
+  background-color: $panel-bg;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease;
+}
+
+.tile:hover {
+  background-color: rgba(38, 41, 60, 0.76);
+}
+
+.tile.on {
+  border-color: rgba(145, 132, 217, 0.5);
+  background-color: rgba(63, 56, 104, 0.72);
+}
+
+.tile.on:hover {
+  background-color: rgba(74, 66, 121, 0.76);
+}
+
+// The lit disc is what carries the state across the room: at 44px it is the
+// largest shape in the panel, and the tile's own fill is a tint either way.
+.tile-icon {
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: $pill;
+  background-color: rgba(233, 233, 237, 0.1);
+  color: $icon-idle;
+  transition:
+    background-color 150ms ease,
+    color 150ms ease;
+}
+
+.tile.on .tile-icon {
+  background-color: $accent;
+  // The panel's own dark on the accent, as on `.badge`: a glyph filled with lit
+  // type would not hold against a surface that bright.
+  color: #161826;
+}
+
+// The weight is said here because the theme's own is bold: everything inside a
+// GTK button inherits it (see `%bare-button`).
+.tile-label {
+  font-size: 15px;
+  font-weight: 500;
+  color: $text-dim;
+}
+
+.tile.on .tile-label {
+  color: $text;
+}
+
+// The line the state is actually written on. Same negative margin as the power
+// rows: the gap Pango leaves between the two labels comes back off so the pair
+// reads as one block.
+.tile-sub {
+  margin-top: -3px;
+  font-size: 13px;
+  font-weight: 400;
+  color: $text-faint;
+}
+
+.tile.on .tile-sub {
+  color: $accent-text;
+}
+
 // The disc every notification wears, in the list and on a toast. It is the
 // accent's own tint rather than the neutral the power rows use: a notification
 // arrived from somewhere, and the colour is what says so at a glance.
