@@ -1,6 +1,8 @@
 import { Accessor, createBinding, createState } from "ags"
 import { createPoll, timeout, type Timer } from "ags/time"
+import { Gdk } from "ags/gtk4"
 import AstalNotifd from "gi://AstalNotifd"
+import Gio from "gi://Gio"
 import GLib from "gi://GLib"
 import { getConfig } from "./config"
 import { t } from "./i18n"
@@ -68,9 +70,67 @@ export function dismissAll(): void {
 }
 
 // The buttons a toast offers. "default" is the click-the-body action of the
-// spec, which this bar has no gesture for, so it never becomes a button.
+// spec, which the card and the row answer with a gesture, so it never becomes a
+// button of its own.
 export function notificationActions(n: Notification): AstalNotifd.Action[] {
   return n.actions.filter((action) => action.id !== "default").slice(0, 2)
+}
+
+// Telling the sender is only half of it: on Wayland an application cannot raise
+// itself, it can only be raised, and what it needs to ask with is an
+// xdg-activation token minted by the surface the click landed on. Without one a
+// browser is told to open its tab and cannot come forward to show it, which is
+// the whole "nothing happened" — so the token goes out first, on the same
+// connection and before the action, since the client reads it as the context of
+// the invocation that follows.
+//
+// GDK mints it against the seat's last implicit grab, which is this very click,
+// and ignores the GAppInfo it is asked for (verified in
+// gdk/wayland/gdkapplaunchcontext-wayland.c) — there is nothing to look the
+// sender's desktop entry up for.
+const NOTIFICATIONS_PATH = "/org/freedesktop/Notifications"
+const NOTIFICATIONS_IFACE = "org.freedesktop.Notifications"
+
+function sendActivationToken(id: number): void {
+  const display = Gdk.Display.get_default()
+  if (!display) return
+
+  // No app info and no files: GDK reads neither, and the empty list is there
+  // because GJS will not marshal a null one.
+  const token = display.get_app_launch_context().get_startup_notify_id(null, [])
+  if (!token) return
+
+  // Emitted by hand because notifd declares the signal and never sends it. It
+  // reaches the client as the daemon's own only because the daemon lives in
+  // this process: `Gio.DBus.session` is the shared connection it owns the name
+  // on, so the signal carries the sender the client filters for.
+  Gio.DBus.session.emit_signal(
+    null,
+    NOTIFICATIONS_PATH,
+    NOTIFICATIONS_IFACE,
+    "ActivationToken",
+    new GLib.Variant("(us)", [id, token]),
+  )
+}
+
+// Clicking the body. Invoking "default" only tells the sender the user asked
+// for it — raising the window, switching to the workspace or opening the tab is
+// the application's to do, and there is nothing in the spec for a daemon to do
+// it with. The daemon resolves an invoked notification itself unless it is
+// `resident`, so nothing here has to; a click with nothing to invoke resolves
+// it all the same, which is what the row's hover promises either way.
+//
+// Returns whether the sender was actually told, since only then is something
+// coming to the front and the panel over it has a reason to close.
+export function activate(n: Notification): boolean {
+  const invoked = n.actions.some((action) => action.id === "default")
+  if (invoked) {
+    sendActivationToken(n.id)
+    n.invoke("default")
+  } else {
+    n.dismiss()
+  }
+  return invoked
 }
 
 // What goes in the disc. Neither field says which of the two it is: the spec's

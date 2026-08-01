@@ -2,7 +2,7 @@ import { Gtk } from "ags/gtk4"
 import { Accessor, For } from "ags"
 import Pango from "gi://Pango"
 import { Icons } from "../lib/icons"
-import { dismissAll, notifications, timeAgo, type Notification } from "../lib/notifications"
+import { activate, dismissAll, notifications, timeAgo, type Notification } from "../lib/notifications"
 import { t } from "../lib/i18n"
 import NotificationIcon from "./NotificationIcon"
 
@@ -15,9 +15,17 @@ const MAX_HEIGHT = 420
 // otherwise, and the column would follow it.
 const TITLE_CHARS = 30
 
-function Row(n: Notification) {
+function Row(n: Notification, close: () => void) {
   return (
     <box class="notification-row" spacing={12}>
+      {/* On the whole row, buttons and all: a GTK4 button claims the sequence,
+          which stops it before it bubbles up to here, so the ✕ still only
+          dismisses. */}
+      <Gtk.GestureClick
+        onReleased={() => {
+          if (activate(n)) close()
+        }}
+      />
       <NotificationIcon notification={n} />
       <box orientation={Gtk.Orientation.VERTICAL} valign={Gtk.Align.CENTER} hexpand>
         <label
@@ -49,7 +57,7 @@ function Row(n: Notification) {
   )
 }
 
-export default function Notifications(props: { visible: Accessor<boolean> }) {
+export default function Notifications(props: { visible: Accessor<boolean>; close: () => void }) {
   const list = notifications()
   const any = list.as((current) => current.length > 0)
 
@@ -85,7 +93,7 @@ export default function Notifications(props: { visible: Accessor<boolean> }) {
               {/* Keyed by the daemon's own id, so a row is rebuilt only when
                   the notification behind it is. */}
               <For each={list} id={(n) => n.id}>
-                {(n) => Row(n)}
+                {(n) => Row(n, props.close)}
               </For>
             </box>
           ) as Gtk.Widget

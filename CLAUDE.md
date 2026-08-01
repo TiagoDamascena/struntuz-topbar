@@ -65,7 +65,15 @@ greeter.
   daemon's list is a hash table with second-resolution timestamps, so sorting it
   needs the id as a tie-break. Do-not-disturb is the daemon's `dontDisturb`
   rather than a state of this module's, so a notification that arrives with
-  nothing on screen is silenced by the same value the tile reads.
+  nothing on screen is silenced by the same value the tile reads. Clicking a
+  card or a row invokes the spec's `default` action, which is the whole of what
+  a daemon can do about "go to the application": invoking only tells the sender,
+  and raising the window or opening the tab is the sender's. The daemon resolves
+  an invoked notification itself unless it is `resident` (astal's
+  `notifd/src/daemon.vala`), so only a click with nothing to invoke has to
+  dismiss by hand — and only an invoked one closes the control centre, since
+  only then is something coming to the front of it. Invoking is not enough on
+  its own, though: see the activation token below.
 - **`lib/nightlight.ts`** — the blue light filter, as shell commands from the
   config rather than calls, for the same reason `lib/power.ts` is: hyprsunset
   answers by default and gammastep would do as well. What it keeps is the
@@ -202,6 +210,33 @@ the sources behind the waybar setup this replaces, plus the notification daemon.
   below* it, so `0` already spares the transparent scrim (verified — the desktop
   behind the open panel stays sharp), while anything higher eats into the panels
   and `1` kills the blur outright, since nothing here is fully opaque.
+- **Invoking a notification's action raises nothing by itself — the application
+  needs an xdg-activation token, and notifd never sends one.** On Wayland a
+  window can only be raised, not raise itself, and what it asks with is a token
+  minted by the surface the click landed on. Notifd *declares* the spec's
+  `ActivationToken` signal and emits it nowhere (one hit in its source, the
+  declaration), so `lib/notifications.ts` emits it by hand on `Gio.DBus.session`
+  before invoking — it reaches the client as the daemon's own only because the
+  daemon lives in this process and therefore owns the name on that same
+  connection. The token comes from `Gdk.Display.get_app_launch_context()
+  .get_startup_notify_id(null, [])`: GDK's Wayland path reads neither argument
+  and mints against the seat's last implicit grab, which is the click itself
+  (`gdk/wayland/gdkapplaunchcontext-wayland.c`), and GJS will not marshal a null
+  file list. Verified end to end with `notify-send --wait -A default=… 
+  --activation-token-fd`: empty before, a real token after.
+  Then the compositor still has to agree. Hyprland's `CWindow::activate` marks
+  the window urgent and returns unless `misc:focus_on_activate` is on
+  (`src/desktop/view/Window.cpp`), which is off by default — so a correct click
+  does visibly nothing until the user turns it on. It does *not* validate the
+  token's serial or origin (`src/protocols/XDGActivation.cpp`), so one minted
+  from a layer surface is as good as any. The README says all this under
+  "Clicking a notification"; it is the user's config, not the bar's.
+- **A GTK4 button claims the gesture sequence, so an ancestor's `GestureClick`
+  never sees the click.** Which is what lets the notification card carry one
+  gesture over the whole of itself, buttons and all: the ✕ and the action
+  buttons stop the press before it bubbles up (verified on the toast and on the
+  list row — the ✕ closes with `DISMISSED_BY_USER` and emits no `ActionInvoked`
+  beside it). No need to fence a click target off from the buttons inside it.
 - **A `scrolledwindow` takes its content through the `child` property, not as a
   JSX child.** gnim's generic append path ends in `vfunc_add_child`, which for a
   scrolled window parents the widget without telling it — GTK then measures a

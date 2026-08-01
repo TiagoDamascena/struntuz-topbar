@@ -4,7 +4,7 @@ import { Accessor, createComputed, createState, For } from "ags"
 import { idle } from "ags/time"
 import Pango from "gi://Pango"
 import { Icons } from "../lib/icons"
-import { notificationActions, timeAgo, toasts, type Notification } from "../lib/notifications"
+import { activate, notificationActions, timeAgo, toasts, type Notification } from "../lib/notifications"
 import { t } from "../lib/i18n"
 import NotificationIcon from "./NotificationIcon"
 
@@ -34,6 +34,14 @@ function Toast(n: Notification) {
       transitionDuration={220}
     >
       <box class="panel toast" spacing={12}>
+        {/* On the whole card, buttons and all: a GTK4 button claims the
+            sequence, which stops it before it bubbles up to here, so the ✕ and
+            the actions still only do their own. */}
+        <Gtk.GestureClick
+          onReleased={() => {
+            activate(n)
+          }}
+        />
         <NotificationIcon notification={n} large />
         <box orientation={Gtk.Orientation.VERTICAL} hexpand>
           <box class="toast-head" spacing={8}>

@@ -14,7 +14,10 @@ NixOS the whole thing is one `enable = true`.
 - **Control centre** — a panel with the user's avatar, name and battery, and a
   power menu: lock, suspend, log out, restart, shut down.
 - **Notifications** — the bar is the session's notification daemon. Cards appear
-  in the corner and stay in the control centre's list until cleared.
+  in the corner and stay in the control centre's list until cleared. Clicking a
+  card or a row hands the click back to the application that sent it, which is
+  what raises its window or opens the tab it was about; one from an application
+  that offers nothing to open is only taken off the list.
 - **Do not disturb** — one switch in the control centre. Cards stop appearing and
   the badge comes off the bar; what arrives still goes to the list, so nothing is
   lost. The switch is remembered across restarts.
@@ -302,6 +305,38 @@ themselves. With home-manager, the same rules go in
 
 To try one before writing it into your config,
 `hyprctl keyword layerrule blur,struntuz-topbar` applies until the next reload.
+
+## Clicking a notification
+
+Clicking a card or a row invokes the notification's default action and hands the
+application an xdg-activation token, which is everything a daemon has to give:
+on Wayland a window cannot raise itself, it can only be raised, and **whether an
+application that asks to be focused gets focused is your compositor's call.**
+
+Hyprland's answer is no by default — `misc:focus_on_activate` is `false`, and an
+application that asks is only marked urgent. So the click reaches the browser
+and nothing comes forward until you turn it on:
+
+```
+misc {
+  focus_on_activate = true
+}
+```
+
+There is a window rule of the same name if you would rather allow it one
+application at a time:
+
+```
+windowrule {
+  name=browser-activate
+  focus_on_activate=true
+  match:class=^(zen|firefox)$
+}
+```
+
+Applications that declared no default action — most of what `notify-send` sends
+— have nothing to come forward with, and clicking those only takes them off the
+list.
 
 ## Development
 

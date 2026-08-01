@@ -124,7 +124,9 @@ export default function ControlCenter(props: {
             <DoNotDisturb />
             <NightLight />
           </box>
-          <Notifications visible={main} />
+          {/* Closing on a notification's own click: what it invoked is coming
+              to the front, and this window covers the whole output. */}
+          <Notifications visible={main} close={dismiss} />
           <PowerMenu visible={menu} onBack={() => setMenu(false)} onRun={dismiss} />
         </box>
       </overlay>
