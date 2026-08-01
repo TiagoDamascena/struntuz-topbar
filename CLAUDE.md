@@ -66,6 +66,19 @@ greeter.
   needs the id as a tie-break. Do-not-disturb is the daemon's `dontDisturb`
   rather than a state of this module's, so a notification that arrives with
   nothing on screen is silenced by the same value the tile reads.
+- **`lib/nightlight.ts`** — the blue light filter, as shell commands from the
+  config rather than calls, for the same reason `lib/power.ts` is: hyprsunset
+  answers by default and gammastep would do as well. What it keeps is the
+  temperature the display is believed to be at, not an on/off of its own — the
+  tile writes that number under its label, which is only worth doing if it is
+  the real one. So the `status` command is read at startup and every time the
+  control centre opens, and the toggle moves the state before the command
+  answers and lets the read back correct it. Which is also why `off` sets
+  `neutral` instead of hyprsunset's `identity`: `identity` is the exact off, but
+  `hyprctl hyprsunset temperature` keeps reporting the temperature from before
+  it (verified — 3400 after an `identity`), so the read back would turn every
+  off straight back into an on. `%d` is the temperature the command has to leave
+  the display at, which is what lets both commands be the same one.
 - **`lib/image.ts`** — one crop, shared by every round picture in the bar: the
   centred square a `Gtk.Image` needs before a `border-radius` can read as a
   circle.

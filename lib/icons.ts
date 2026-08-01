@@ -9,6 +9,7 @@ import close from "inline:../icons/struntuz-close-symbolic.svg"
 import lock from "inline:../icons/struntuz-lock-symbolic.svg"
 import logout from "inline:../icons/struntuz-logout-symbolic.svg"
 import moon from "inline:../icons/struntuz-moon-symbolic.svg"
+import moonStars from "inline:../icons/struntuz-moon-stars-symbolic.svg"
 import power from "inline:../icons/struntuz-power-symbolic.svg"
 import restart from "inline:../icons/struntuz-restart-symbolic.svg"
 import sliders from "inline:../icons/struntuz-sliders-symbolic.svg"
@@ -23,6 +24,9 @@ export const Icons = {
   notificationOff: "struntuz-bell-slash-symbolic",
   lock: "struntuz-lock-symbolic",
   logout: "struntuz-logout-symbolic",
+  // Stars beside the crescent, so the filter's tile and the power menu's
+  // suspend row do not read as the same switch.
+  nightLight: "struntuz-moon-stars-symbolic",
   power: "struntuz-power-symbolic",
   restart: "struntuz-restart-symbolic",
   suspend: "struntuz-moon-symbolic",
@@ -36,6 +40,7 @@ const SOURCES: Record<string, string> = {
   [Icons.notificationOff]: bellSlash,
   [Icons.lock]: lock,
   [Icons.logout]: logout,
+  [Icons.nightLight]: moonStars,
   [Icons.power]: power,
   [Icons.restart]: restart,
   [Icons.suspend]: moon,

@@ -14,6 +14,11 @@ export interface Strings {
   doNotDisturbOn: string
   doNotDisturbOff: string
 
+  nightLight: string
+  nightLightOff: string
+  // `%d` is the colour temperature the display is at, in kelvin.
+  nightLightKelvin: string
+
   notifications: string
   notificationsClear: string
   notificationsEmpty: string
@@ -55,6 +60,10 @@ const EN: Strings = {
   doNotDisturbOn: "On",
   doNotDisturbOff: "Off",
 
+  nightLight: "Night Light",
+  nightLightOff: "Off",
+  nightLightKelvin: "%d K",
+
   notifications: "Notifications",
   notificationsClear: "Clear all",
   notificationsEmpty: "Nothing new",
@@ -92,6 +101,10 @@ const PT_BR: Partial<Strings> = {
   doNotDisturb: "Não perturbe",
   doNotDisturbOn: "Ligado",
   doNotDisturbOff: "Desligado",
+
+  nightLight: "Luz noturna",
+  nightLightOff: "Desligada",
+  nightLightKelvin: "%d K",
 
   notifications: "Notificações",
   notificationsClear: "Limpar tudo",

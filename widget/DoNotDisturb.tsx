@@ -1,5 +1,4 @@
 import { Gtk } from "ags/gtk4"
-import { Accessor } from "ags"
 import { Icons } from "../lib/icons"
 import { dontDisturb, toggleDontDisturb } from "../lib/notifications"
 import { t } from "../lib/i18n"
@@ -8,15 +7,11 @@ import { t } from "../lib/i18n"
 // the design splits a tile in two — the disc toggles, the body opens a
 // sub-panel — and do-not-disturb has no sub-panel to open, so the whole tile
 // does the one thing it has.
-export default function DoNotDisturb(props: { visible: Accessor<boolean> }) {
+export default function DoNotDisturb() {
   const on = dontDisturb()
 
   return (
-    <button
-      class={on.as((quiet) => (quiet ? "tile on" : "tile"))}
-      visible={props.visible}
-      onClicked={toggleDontDisturb}
-    >
+    <button class={on.as((quiet) => (quiet ? "tile on" : "tile"))} onClicked={toggleDontDisturb}>
       <box spacing={11}>
         <image
           class="tile-icon"

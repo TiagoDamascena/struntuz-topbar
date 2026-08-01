@@ -168,6 +168,75 @@ in
               };
             };
           };
+
+          nightLight = lib.mkOption {
+            default = { };
+            description = ''
+              The blue light filter's tile. Commands rather than built-in calls
+              for the same reason the power menu's are: hyprsunset answers by
+              default, wlsunset and gammastep do the same job, and which of them
+              runs is the session's business.
+            '';
+            type = lib.types.submodule {
+              options = {
+                temperature = lib.mkOption {
+                  type = lib.types.ints.unsigned;
+                  default = 3400;
+                  description = ''
+                    Colour temperature the filter runs at, in kelvin, and what
+                    `%d` in `on` becomes. The tile writes it under its label.
+                  '';
+                };
+
+                neutral = lib.mkOption {
+                  type = lib.types.ints.unsigned;
+                  default = 6000;
+                  example = 6500;
+                  description = ''
+                    Colour temperature the display reads at with nothing
+                    filtering it, and what `%d` in `off` becomes. 6000 is
+                    hyprsunset's own default. What `status` reports is measured
+                    against it: below is on, at or above is off.
+                  '';
+                };
+
+                on = lib.mkOption {
+                  type = lib.types.str;
+                  default = "hyprctl hyprsunset temperature %d";
+                  example = "gammastep -P -O %d";
+                  description = ''
+                    Turn the filter on. Every `%d` becomes `temperature`, so the
+                    warmth is one setting rather than a number repeated in a
+                    string.
+                  '';
+                };
+
+                off = lib.mkOption {
+                  type = lib.types.str;
+                  default = "hyprctl hyprsunset temperature %d";
+                  example = "gammastep -x";
+                  description = ''
+                    Turn it off, every `%d` becoming `neutral` this time. Not
+                    hyprsunset's `identity`, which is the exact off but leaves
+                    `status` reporting the temperature from before it — the tile
+                    would then read every off as an on.
+                  '';
+                };
+
+                status = lib.mkOption {
+                  type = lib.types.str;
+                  default = "hyprctl hyprsunset temperature";
+                  description = ''
+                    Print the temperature the display is at now, in kelvin. It
+                    is read when the bar starts and every time the control
+                    centre opens, which is what keeps the tile honest across a
+                    restart of the bar and a keybind that went round it. Empty
+                    leaves the tile trusting its own last click.
+                  '';
+                };
+              };
+            };
+          };
         };
       };
     };

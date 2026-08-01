@@ -12,6 +12,17 @@ export interface PowerCommands {
   shutdown: string
 }
 
+// The blue light filter, as commands for the same reason the power ones are:
+// hyprsunset answers here, wlsunset or gammastep elsewhere, and which of them
+// is running is the session's business, not the bar's.
+export interface NightLight {
+  temperature: number
+  neutral: number
+  on: string
+  off: string
+  status: string
+}
+
 export interface Config {
   language: string
   dateFormat: string
@@ -21,6 +32,7 @@ export interface Config {
   toastTimeout: number
   toastLimit: number
   powerCommands: PowerCommands
+  nightLight: NightLight
 }
 
 // User config; `STRUNTUZ_TOPBAR_CONFIG` overrides it (useful in development).
@@ -53,6 +65,22 @@ export const DEFAULTS: Config = {
     restart: "systemctl reboot",
     shutdown: "systemctl poweroff",
   },
+  nightLight: {
+    // What the filter runs at, and what `%d` in `on` becomes.
+    temperature: 3400,
+    // What the display reads at with nothing filtering it, and what `%d` in
+    // `off` becomes. 6000 is hyprsunset's own default, which is why it is the
+    // temperature a display it has never been asked to warm reports.
+    neutral: 6000,
+    on: "hyprctl hyprsunset temperature %d",
+    // Not `identity`, which is the exact off but leaves `status` reporting the
+    // temperature from before it — so the tile would read every off as an on.
+    off: "hyprctl hyprsunset temperature %d",
+    // Prints the temperature the display is at now. It is what keeps the tile
+    // honest across a restart of the bar and a keybind that went round it;
+    // empty leaves it trusting its own last click.
+    status: "hyprctl hyprsunset temperature",
+  },
 }
 
 function str(value: unknown, fallback: string): string {
@@ -77,6 +105,18 @@ function powerCommands(raw: unknown): PowerCommands {
   }
 }
 
+function nightLight(raw: unknown): NightLight {
+  const from = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {}
+  const defaults = DEFAULTS.nightLight
+  return {
+    temperature: num(from.temperature, defaults.temperature),
+    neutral: num(from.neutral, defaults.neutral),
+    on: str(from.on, defaults.on),
+    off: str(from.off, defaults.off),
+    status: str(from.status, defaults.status),
+  }
+}
+
 // Per-key merge over the defaults: unknown keys are ignored and a bad value
 // only costs its own key, never the whole file.
 function merge(raw: Record<string, unknown>): Config {
@@ -90,6 +130,7 @@ function merge(raw: Record<string, unknown>): Config {
     toastTimeout: num(raw.toastTimeout, DEFAULTS.toastTimeout),
     toastLimit: num(raw.toastLimit, DEFAULTS.toastLimit),
     powerCommands: powerCommands(raw.powerCommands),
+    nightLight: nightLight(raw.nightLight),
   }
 }
 

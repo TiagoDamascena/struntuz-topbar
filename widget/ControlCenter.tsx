@@ -5,8 +5,10 @@ import { Icons } from "../lib/icons"
 import { batteryStatus, userAvatar, userInitial, userName } from "../lib/session"
 import { t } from "../lib/i18n"
 import DoNotDisturb from "./DoNotDisturb"
+import NightLight from "./NightLight"
 import Notifications from "./Notifications"
 import PowerMenu from "./PowerMenu"
+import { readNightLight } from "../lib/nightlight"
 
 // The design's own geometry: the panel hangs 66px below the top of the screen,
 // 14px in from the right, in a 452px column. Measured from the top of the
@@ -72,6 +74,13 @@ export default function ControlCenter(props: {
     props.close()
   }
 
+  // The night light is not the bar's to keep: a keybind or hyprsunset's own
+  // schedule can have moved it since the panel was last up, so it is asked
+  // again every time the panel comes back.
+  props.open.subscribe(() => {
+    if (props.open.get()) readNightLight()
+  })
+
   return (
     <window
       visible={props.open}
@@ -108,12 +117,13 @@ export default function ControlCenter(props: {
           marginEnd={PANEL_SIDE}
         >
           <UserPill visible={main} onPower={() => setMenu(true)} />
-          {/* Where the design's tile grid goes, between the user pill and the
-              notifications. It is two columns there and this is the first tile
-              of it, so until it has a neighbour it takes the whole width —
-              half a row of tile beside half a row of nothing reads as a
-              missing widget, not as a grid waiting to fill. */}
-          <DoNotDisturb visible={main} />
+          {/* The design's tile grid, between the user pill and the
+              notifications: two columns of equal width, which is what
+              `homogeneous` gives whatever the labels measure. */}
+          <box spacing={10} homogeneous visible={main}>
+            <DoNotDisturb />
+            <NightLight />
+          </box>
           <Notifications visible={main} />
           <PowerMenu visible={menu} onBack={() => setMenu(false)} onRun={dismiss} />
         </box>

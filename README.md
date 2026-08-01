@@ -18,6 +18,10 @@ NixOS the whole thing is one `enable = true`.
 - **Do not disturb** — one switch in the control centre. Cards stop appearing and
   the badge comes off the bar; what arrives still goes to the list, so nothing is
   lost. The switch is remembered across restarts.
+- **Night light** — the tile beside it, warming the display through
+  [hyprsunset](https://github.com/hyprwm/hyprsunset) by default. It runs
+  commands, so any other filter does as well, and it reads the temperature back
+  rather than assuming its own clicks are the whole story.
 
 Localized in English and Brazilian Portuguese, following the session's locale by
 default.
@@ -28,6 +32,9 @@ default.
   widget, which reads its state from Hyprland's IPC; everything else is
   compositor-agnostic.
 - The **Inter** font, installed and visible to fontconfig.
+- **hyprsunset**, running, for the night light tile as configured out of the box.
+  Point `nightLight` at another filter if you use one; the tile stays either way
+  and only says the command failed.
 - No other notification daemon running, since only one process can own
   `org.freedesktop.Notifications`.
 
@@ -119,6 +126,8 @@ programs.struntuz-topbar = {
       lock = "loginctl lock-session";
       logout = "uwsm stop";
     };
+
+    nightLight.temperature = 3000;
   };
 };
 ```
@@ -193,6 +202,13 @@ warns and uses the defaults.
     "logout": "hyprctl dispatch exit",
     "restart": "systemctl reboot",
     "shutdown": "systemctl poweroff"
+  },
+  "nightLight": {
+    "temperature": 3400,
+    "neutral": 6000,
+    "on": "hyprctl hyprsunset temperature %d",
+    "off": "hyprctl hyprsunset temperature %d",
+    "status": "hyprctl hyprsunset temperature"
   }
 }
 ```
@@ -207,9 +223,31 @@ warns and uses the defaults.
 | `toastTimeout` | `6800` | How long a notification card stays up, in ms, when its sender asked for no timeout. |
 | `toastLimit` | `3` | How many cards stack up before the oldest leaves the screen. It stays in the list. |
 | `powerCommands` | see above | One shell command per entry of the power menu, each overridable on its own. |
+| `nightLight` | see above | The blue light filter. `%d` in `on` and `off` is the temperature the command has to leave the display at: `temperature` turning on, `neutral` turning off. `status` prints where it is now, and is read against `neutral` — below it is on. |
 
 The power menu runs commands rather than calling logind directly, so what "lock"
-or "log out" means on your system stays yours to decide.
+or "log out" means on your system stays yours to decide. The night light is the
+same idea: `hyprsunset` has to be running for the defaults to answer, and any
+other filter fits by rewriting the three commands —
+
+```json
+{
+  "nightLight": {
+    "neutral": 6500,
+    "on": "gammastep -P -O %d",
+    "off": "gammastep -x",
+    "status": ""
+  }
+}
+```
+
+An empty `status` is allowed and costs only the read back: the tile then trusts
+its own last click, and shows nothing of a filter turned on from elsewhere.
+
+The default `off` sets `neutral` rather than using hyprsunset's `identity`, which
+is the exact off but leaves `hyprctl hyprsunset temperature` reporting the
+temperature from before it — the tile would read every off as an on. Whatever
+`off` does, `status` has to agree with it.
 
 Set `STRUNTUZ_TOPBAR_CONFIG` to read the config from somewhere else, which is
 useful while iterating:
