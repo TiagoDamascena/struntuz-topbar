@@ -1,5 +1,5 @@
 import { Gtk } from "ags/gtk4"
-import { Accessor, For } from "ags"
+import { For } from "ags"
 import Pango from "gi://Pango"
 import { Icons } from "../lib/icons"
 import { activate, dismissAll, notifications, timeAgo, type Notification } from "../lib/notifications"
@@ -57,12 +57,12 @@ function Row(n: Notification, close: () => void) {
   )
 }
 
-export default function Notifications(props: { visible: Accessor<boolean>; close: () => void }) {
+export default function Notifications(props: { close: () => void }) {
   const list = notifications()
   const any = list.as((current) => current.length > 0)
 
   return (
-    <box class="panel notifications" orientation={Gtk.Orientation.VERTICAL} visible={props.visible}>
+    <box class="panel notifications" orientation={Gtk.Orientation.VERTICAL}>
       <box class="notifications-head" spacing={8}>
         <image class="notifications-head-icon" iconName={Icons.notification} pixelSize={14} />
         <label class="notifications-head-label" label={t.notifications} />

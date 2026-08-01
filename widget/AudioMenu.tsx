@@ -1,5 +1,5 @@
 import { Gtk } from "ags/gtk4"
-import { Accessor, For } from "ags"
+import { For } from "ags"
 import Pango from "gi://Pango"
 import { Icons, VolumeIcons } from "../lib/icons"
 import {
@@ -69,9 +69,18 @@ function Row(speaker: Speaker) {
 // everything that can play the sound it is setting the level of. Picking one
 // leaves the menu open — the point of coming here is usually to hear the
 // difference, and the volume bar is right above the list.
-export default function AudioMenu(props: { visible: Accessor<boolean>; onBack: () => void }) {
+// The page it is in the control centre's stack goes here rather than at the
+// call site: `$type` reaches the parent from the widget it made, and the name
+// beside it is what the stack adds it under.
+export default function AudioMenu(props: { onBack: () => void }) {
   return (
-    <box class="panel submenu" orientation={Gtk.Orientation.VERTICAL} visible={props.visible}>
+    <box
+      $type="named"
+      name="audio"
+      class="panel submenu"
+      orientation={Gtk.Orientation.VERTICAL}
+      valign={Gtk.Align.START}
+    >
       <box class="submenu-head" spacing={9}>
         <button
           class="icon-button"

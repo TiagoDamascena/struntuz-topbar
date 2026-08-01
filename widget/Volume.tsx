@@ -1,5 +1,4 @@
 import { Gtk } from "ags/gtk4"
-import { Accessor } from "ags"
 import { Icons } from "../lib/icons"
 import {
   hasAudio,
@@ -24,7 +23,6 @@ import { t } from "../lib/i18n"
 // the two buttons are overlay children of their own: a widget that cannot be
 // targeted takes its children with it.
 export default function Volume(props: {
-  visible?: Accessor<boolean>
   // Inside the audio menu the bar is a well in a panel rather than a panel of
   // its own, and there is nothing left for the caret to open.
   inset?: boolean
@@ -35,12 +33,9 @@ export default function Volume(props: {
   if (!hasAudio()) return <box visible={false} />
 
   const silent = muted()
-  // The menu's own copy is only ever up with the menu around it, so it has
-  // nothing to follow — and a GObject property is not given `undefined`.
-  const visible = props.visible ?? true
 
   return (
-    <overlay class={props.inset ? "slider-pill inset" : "slider-pill"} visible={visible}>
+    <overlay class={props.inset ? "slider-pill inset" : "slider-pill"}>
       <slider
         hexpand
         value={level()}

@@ -262,6 +262,13 @@ $clock-size: 14px;
   font-weight: 500;
 }
 
+// The panel column comes and goes in `widget/ControlCenter.tsx`, as a revealer
+// sliding it in from the right — nothing here. A CSS margin was tried first,
+// to carry the column off the output and back, and GTK does not animate one
+// that far: the negative margin takes the widget's own measurement below zero,
+// which GTK clamps ("GtkStack reported min width -84"), and the column jumps
+// into place instead of travelling (verified frame by frame).
+
 // The panels below the bar. They float in a window that covers the output, so
 // nothing paints between them either.
 .panel {

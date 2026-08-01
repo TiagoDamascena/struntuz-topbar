@@ -24,12 +24,13 @@ export default function Bar(gdkmonitor: Gdk.Monitor) {
     setOpen(true)
   }
 
+  // Only the window: which view it goes back to is the panel's own, since it
+  // has to stay on the one it is showing until it has finished leaving.
   function hide() {
-    setView("main")
     setOpen(false)
   }
 
-  ControlCenter({ gdkmonitor, open, view, setView, close: () => setOpen(false) })
+  ControlCenter({ gdkmonitor, open, view, setView, close: hide })
   Toasts({ gdkmonitor, hidden: open })
 
   // Lit only while the panel is showing what it opens, so the toggle and the

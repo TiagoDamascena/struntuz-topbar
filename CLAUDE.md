@@ -371,6 +371,42 @@ the sources behind the waybar setup this replaces, plus the notification daemon.
   unallocated and invisible, with no warning anywhere. The `child` prop goes
   through `set_child` and works. Watch for the same on any GTK4 widget that is
   a bin rather than a container.
+- **The control centre comes in from the right, and that is the user's call, not
+  a default.** It slid down from under the bar first, which is what the shape
+  suggests and what reads wrong: the bar is a row of floating pills with gaps
+  between them, so there is nothing up there for a panel to come out of and most
+  of the movement happens over bare wallpaper. A fade was tried after it and
+  turned down too. `Gtk.RevealerTransitionType.SLIDE_LEFT` with `halign: END` is
+  what it is now — pinned right, so what the transition moves is the left edge.
+- **A CSS margin cannot carry a widget off the screen and back.** The obvious
+  way to slide a panel in is a `margin-right` from minus its own width to 0, and
+  GTK clamps it: the negative margin takes the widget's own measurement below
+  zero ("GtkStack reported min width -84"), and the column jumps into place
+  instead of travelling (verified frame by frame). Margins animate over short
+  distances — `.slider-face` moves 24px — not over the width of a panel. A
+  revealer is the lever for that.
+- **A `Gtk.Revealer` inside a `Gtk.Revealer` does not give you two
+  transitions.** A revealer keeps its child not child-visible — and so
+  unmapped — until its own animation is under way, and `gtk_revealer_start_
+  animation` skips straight to the end state on a widget that is not mapped. So
+  the inner one is already open by the time the outer one starts (verified: an
+  inner slide stood at full height while the outer one faded). The same goes for
+  a CSS transition triggered on anything inside a closed revealer — if a second
+  property has to animate, it belongs on the revealer's own node, which is the
+  overlay's child and is mapped for as long as the window is.
+- **A window that animates its way out has to outlive its own `visible`.**
+  `widget/ControlCenter.tsx` splits the bar's `open` into a `mounted` (the
+  window) and a `revealed` (what is in it): opening sets them a turn of the loop
+  apart, so the revealer is mapped with its child still hidden and has something
+  to animate from, and closing clears `revealed` first and only drops the window
+  once the transition it started has run. Which view it goes back to is reset at
+  the same point, or the panel slides through the main view on its way out.
+- **A `Gtk.Stack` page is `$type="named"` plus `name` on the widget itself**, and
+  gnim reads both off the child (`gtk4/jsx-runtime.ts`), so a sub-panel declares
+  its own page rather than being wrapped at the call site. `visibleChildName`,
+  though, cannot be a prop: gnim peeks an accessor into the constructor, which
+  runs before any page is added, and the stack warns that the name is not one of
+  its children. Set it from `$`, which runs last.
 - **Never draw an icon. Ask the user for it.** `icons/` is one set with its own
   size relationships (below), and a glyph invented to fill a gap sits beside
   them rather than in them — it reads as the odd one out however carefully it is

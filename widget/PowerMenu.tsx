@@ -1,5 +1,4 @@
 import { Gtk } from "ags/gtk4"
-import { Accessor } from "ags"
 import { Icons } from "../lib/icons"
 import { powerItems, runPower, type PowerItem } from "../lib/power"
 import { sessionStatus } from "../lib/session"
@@ -28,13 +27,17 @@ function Row(item: PowerItem, onRun: () => void) {
   )
 }
 
-export default function PowerMenu(props: {
-  visible: Accessor<boolean>
-  onBack: () => void
-  onRun: () => void
-}) {
+// Its page in the control centre's stack is declared here, as the audio menu's
+// is: `$type` reaches the parent from the widget it made.
+export default function PowerMenu(props: { onBack: () => void; onRun: () => void }) {
   return (
-    <box class="panel submenu" orientation={Gtk.Orientation.VERTICAL} visible={props.visible}>
+    <box
+      $type="named"
+      name="power"
+      class="panel submenu"
+      orientation={Gtk.Orientation.VERTICAL}
+      valign={Gtk.Align.START}
+    >
       <box class="submenu-head" spacing={9}>
         <button
           class="icon-button"

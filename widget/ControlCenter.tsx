@@ -1,6 +1,7 @@
 import app from "ags/gtk4/app"
 import { Astal, Gdk, Gtk } from "ags/gtk4"
-import { Accessor } from "ags"
+import { Accessor, createState, onCleanup } from "ags"
+import { idle, timeout, Timer } from "ags/time"
 import { Icons } from "../lib/icons"
 import { batteryStatus, userAvatar, userInitial, userName } from "../lib/session"
 import { t } from "../lib/i18n"
@@ -17,6 +18,17 @@ import { PANEL_SIDE, PANEL_TOP } from "../lib/layout"
 // output, since the window ignores exclusive zones (see `lib/layout.ts`).
 const PANEL_WIDTH = 400
 const AVATAR = 36
+
+// The panel sliding in from off the right edge and back out, which is
+// `.control-center` in the stylesheet — this is the same number written a
+// second time. The window has to outlive the close by exactly it, or there is
+// nothing left on screen to animate; hence the mount/reveal pair below rather
+// than the window's own `visible`.
+const REVEAL_MS = 220
+
+// Sliding from one view to the next. Shorter than the reveal: the panel is
+// already up, and only its contents are changing.
+const SWITCH_MS = 170
 
 // The picture, or the initial when there is none. `overflow` is what rounds the
 // picture off: in GTK4 a border-radius clips the background but not the content,
@@ -37,9 +49,9 @@ function Avatar() {
   )
 }
 
-function UserPill(props: { visible: Accessor<boolean>; onPower: () => void }) {
+function UserPill(props: { onPower: () => void }) {
   return (
-    <box class="panel user" spacing={10} visible={props.visible}>
+    <box class="panel user" spacing={10}>
       <Avatar />
       <box orientation={Gtk.Orientation.VERTICAL} valign={Gtk.Align.CENTER} hexpand>
         <label class="user-name" label={userName()} xalign={0} />
@@ -61,6 +73,11 @@ function UserPill(props: { visible: Accessor<boolean>; onPower: () => void }) {
 // design, so the panel is only ever showing one of these. It is the bar's state
 // and not this window's: the bar's segments open the panel straight onto a
 // sub-panel, so what is showing has to be readable from up there.
+//
+// They are also the names of the pages in the `Gtk.Stack` below, which is what
+// slides one into the next — and the stack slides on the order they are added
+// in, so `main` has to be the first page for a sub-panel to come in from the
+// right and go back out to it.
 export type View = "main" | "power" | "audio"
 
 export default function ControlCenter(props: {
@@ -72,24 +89,40 @@ export default function ControlCenter(props: {
 }) {
   const { TOP, BOTTOM, LEFT, RIGHT } = Astal.WindowAnchor
 
-  const showing = (name: View) => props.view.as((current) => current === name)
-  const main = showing("main")
+  // Two states where the window used to take `open` straight: `mounted` is
+  // whether there is a window at all, `revealed` is whether what is in it is on
+  // screen. Opening sets both, a turn of the loop apart, since a revealer needs
+  // to be mapped with its child still hidden to have anything to animate from;
+  // closing clears `revealed` first and only takes the window away once the
+  // animation it started has run.
+  const [mounted, setMounted] = createState(false)
+  const [revealed, setRevealed] = createState(false)
+  let pending: Timer | null = null
 
-  function dismiss() {
-    props.setView("main")
-    props.close()
-  }
-
-  // The night light is not the bar's to keep: a keybind or hyprsunset's own
-  // schedule can have moved it since the panel was last up, so it is asked
-  // again every time the panel comes back.
   props.open.subscribe(() => {
-    if (props.open.get()) readNightLight()
+    pending?.cancel()
+
+    if (props.open.get()) {
+      // The night light is not the bar's to keep: a keybind or hyprsunset's own
+      // schedule can have moved it since the panel was last up, so it is asked
+      // again every time the panel comes back.
+      readNightLight()
+      setMounted(true)
+      pending = idle(() => setRevealed(true))
+    } else {
+      setRevealed(false)
+      pending = timeout(REVEAL_MS, () => {
+        setMounted(false)
+        // Back to the main view only once it is out of sight: reset it on the
+        // way out and the panel slides back through it as it fades.
+        props.setView("main")
+      })
+    }
   })
 
   return (
     <window
-      visible={props.open}
+      visible={mounted}
       name="struntuz-control-center"
       namespace="struntuz-control-center"
       gdkmonitor={props.gdkmonitor}
@@ -104,39 +137,80 @@ export default function ControlCenter(props: {
       <Gtk.EventControllerKey
         onKeyPressed={(_self, keyval) => {
           if (keyval !== Gdk.KEY_Escape) return false
-          dismiss()
+          props.close()
           return true
         }}
       />
       <overlay>
         <box>
-          <Gtk.GestureClick onPressed={dismiss} />
+          <Gtk.GestureClick onPressed={props.close} />
         </box>
-        <box
+        {/* The panel comes in from the right and leaves the same way, rather
+            than down from under the bar: the bar is a row of floating pills
+            with gaps between them, so there is nothing up there for a panel to
+            come out of, and most of a drop happened over bare wallpaper. The
+            revealer is what carries it — pinned to the right by `halign`, so
+            what its transition grows and shrinks is the left edge. */}
+        <revealer
           $type="overlay"
-          orientation={Gtk.Orientation.VERTICAL}
-          spacing={8}
-          widthRequest={PANEL_WIDTH}
+          revealChild={revealed}
+          transitionType={Gtk.RevealerTransitionType.SLIDE_LEFT}
+          transitionDuration={REVEAL_MS}
           halign={Gtk.Align.END}
           valign={Gtk.Align.START}
           marginTop={PANEL_TOP}
           marginEnd={PANEL_SIDE}
         >
-          <UserPill visible={main} onPower={() => props.setView("power")} />
-          {/* The design's tile grid, between the user pill and the
-              notifications: two columns of equal width, which is what
-              `homogeneous` gives whatever the labels measure. */}
-          <box spacing={8} homogeneous visible={main}>
-            <DoNotDisturb />
-            <NightLight />
-          </box>
-          <Volume visible={main} onOpen={() => props.setView("audio")} />
-          {/* Closing on a notification's own click: what it invoked is coming
-              to the front, and this window covers the whole output. */}
-          <Notifications visible={main} close={dismiss} />
-          <AudioMenu visible={showing("audio")} onBack={() => props.setView("main")} />
-          <PowerMenu visible={showing("power")} onBack={() => props.setView("main")} onRun={dismiss} />
-        </box>
+          {/* One page per view rather than three panels taking turns at being
+              visible. `interpolateSize` is what makes the swap a move and not a
+              jump: the pages are different heights, and without it the column
+              snaps to the new one on the first frame. */}
+          <stack
+            // Nothing to click while it is on its way out: `can-target` takes a
+            // widget's children with it, so the whole panel goes at once.
+            canTarget={revealed}
+            // Not `visibleChildName={props.view}`: gnim peeks an accessor into
+            // the constructor, and a stack with no pages yet warns that the
+            // name is not one of them. `$` runs once everything is in.
+            $={(self) => {
+              const apply = () => self.set_visible_child_name(props.view.get())
+              apply()
+              onCleanup(props.view.subscribe(apply))
+            }}
+            transitionType={Gtk.StackTransitionType.SLIDE_LEFT_RIGHT}
+            transitionDuration={SWITCH_MS}
+            vhomogeneous={false}
+            interpolateSize
+            widthRequest={PANEL_WIDTH}
+          >
+            {/* Every page holds its natural height: while the stack is
+                interpolating from one to the other it is taller than one of
+                them, and a page that filled would stretch on the way. */}
+            <box
+              $type="named"
+              name="main"
+              orientation={Gtk.Orientation.VERTICAL}
+              spacing={8}
+              valign={Gtk.Align.START}
+            >
+              <UserPill onPower={() => props.setView("power")} />
+              {/* The design's tile grid, between the user pill and the
+                  notifications: two columns of equal width, which is what
+                  `homogeneous` gives whatever the labels measure. */}
+              <box spacing={8} homogeneous>
+                <DoNotDisturb />
+                <NightLight />
+              </box>
+              <Volume onOpen={() => props.setView("audio")} />
+              {/* Closing on a notification's own click: what it invoked is
+                  coming to the front, and this window covers the whole
+                  output. */}
+              <Notifications close={props.close} />
+            </box>
+            <AudioMenu onBack={() => props.setView("main")} />
+            <PowerMenu onBack={() => props.setView("main")} onRun={props.close} />
+          </stack>
+        </revealer>
       </overlay>
     </window>
   )
