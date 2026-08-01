@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 A Wayland top bar built with AGS 3.x (TypeScript + GTK4), replacing waybar on
 Hyprland. Same stack as its sibling `struntuz-greet`. It ships as a Nix flake
-exposing the package; there is no NixOS/home-manager module yet.
+exposing the package and `homeModules.default`.
 
 ## Commands
 
@@ -70,6 +70,14 @@ greeter.
 - **`lib/session.ts`** / **`lib/power.ts`** — who is logged in and what the power
   menu can do to that session. The actions are shell commands from the config,
   not calls: what "lock" means belongs to the session, not to a bar.
+- **`nix/module.nix`** — the home-manager module, mirroring the greeter's
+  `nix/module.nix` in shape (an option per config key over a `freeformType`, so
+  a key this module has not caught up with still reaches the JSON). It is
+  home-manager's and not NixOS's because everything the bar touches is the
+  user's: `$XDG_CONFIG_HOME` for the config, `~/.face` for the avatar, and a
+  *user* unit under the compositor. The greeter is a NixOS module for the
+  mirror reason — greetd runs before anyone has logged in. Every option added
+  to `lib/config.ts` wants one here and a paragraph in the README.
 
 The design is a Claude Design project ("Interface Linux minimalista roxa",
 `Desktop Nocturne v3.dc.html`), read through the DesignSync tool. Its top bar is a
@@ -188,6 +196,18 @@ the sources behind the waybar setup this replaces, plus the notification daemon.
 - **A new source file must be `git add`ed before `nix build` sees it.** `src = ./.`
   on a flake only picks up files git knows about; an untracked widget fails the
   bundle with `Could not resolve`. The same goes for anything under `icons/`.
+- **The module's systemd unit binds `graphical-session.target`, not
+  `hyprland-session.target`.** Home-manager's Hyprland module generates the
+  latter with `BindsTo=graphical-session.target` (verified by evaluating it), so
+  binding the general one covers Hyprland *and* uwsm. What it does depend on is
+  the compositor handing its environment to the systemd user manager, since the
+  unit carries `ConditionEnvironment=WAYLAND_DISPLAY` — without that import the
+  unit never starts and says nothing about why.
+- **The module does not touch the compositor's config.** The blur layerrules are
+  the user's to write, deliberately — the module's scope is the bar itself (its
+  package, its config file, its unit), not the session around it. The README
+  documents the three namespaces and gives the Hyprland rules; keep them in sync
+  with `widget/` when a `namespace` changes.
 - Monitors are enumerated once in `main()`, so hotplugged outputs get no bar
   until the process restarts.
 - `node_modules/` and `@girs/` are gitignored and reconstructed by the dev shell.

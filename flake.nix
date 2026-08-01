@@ -84,6 +84,11 @@
         }
       );
 
+      # A session program, so the module is home-manager's: the config goes to
+      # the user's XDG dir and the service is a user unit under the compositor.
+      homeModules.default = import ./nix/module.nix self;
+      homeManagerModules = self.homeModules;
+
       devShells = forAllSystems (
         { system, pkgs }:
         let
