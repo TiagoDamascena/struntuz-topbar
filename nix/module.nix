@@ -119,6 +119,15 @@ in
             '';
           };
 
+          volumeStep = lib.mkOption {
+            type = lib.types.ints.unsigned;
+            default = 5;
+            description = ''
+              How far a scroll or an arrow key moves the volume bar, in percent.
+              Held to 1–100: anything outside that is not a step.
+            '';
+          };
+
           powerCommands = lib.mkOption {
             default = { };
             description = ''

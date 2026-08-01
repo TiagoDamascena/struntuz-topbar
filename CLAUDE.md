@@ -87,6 +87,22 @@ greeter.
   it (verified — 3400 after an `identity`), so the read back would turn every
   off straight back into an on. `%d` is the temperature the command has to leave
   the display at, which is what lets both commands be the same one.
+- **`lib/audio.ts`** — the bar's audio segment, the volume bar and its menu, over
+  `AstalWp`. It holds no endpoint: the default speaker is replaced when headphones go in and when the
+  menu picks another one, so every reading goes through whichever is default at
+  the time (`fromSpeaker`, a computed that re-subscribes when the default
+  changes). The level it reports is 0 while muted — what is drawn is what you
+  would hear — but muting never writes the volume, which is why the widget
+  listens on `change-value` and not on the value itself. Volume is wireplumber's
+  cubic scale, not linear amplitude. Wireplumber may be absent altogether, so
+  `hasAudio()` is what the widgets check before rendering anything, and
+  `volumeIcon` is what picks the glyph, since the speaker is a ramp (below).
+  Which panel the control centre comes down on lives in `widget/Bar.tsx`, not in
+  the window: `widget/Segments.tsx` is the design's pill of one round button per
+  source, and a segment both opens the panel onto its own sub-panel and stays
+  lit while that one is showing, which it cannot do from below. The toggle
+  beside it is lit only on the main view for the same reason — two lit buttons
+  would read as two things being open.
 - **`lib/image.ts`** — one crop, shared by every round picture in the bar: the
   centred square a `Gtk.Image` needs before a `border-radius` can read as a
   circle.
@@ -181,6 +197,36 @@ the sources behind the waybar setup this replaces, plus the notification daemon.
   never rescale one alone: the set is drawn with its own size relationships.
   They are also Apple's and not redistributable, which is worth raising before
   this repo goes anywhere public.
+- **A glyph wider than tall loses height, and the box cannot be widened to give
+  it back.** Both halves measured through GTK's own path (`lookup_icon` →
+  `snapshot_symbolic` → texture): a `viewBox="0 0 32 24"` renders 152×114 at
+  `pixelSize` 152, because GTK loads a symbolic SVG with
+  `preserve_aspect_ratio` into the square the size asks for — so a wide box is
+  just the whole glyph drawn 24/32 smaller, the same hidden downscale the old
+  28×28 padding was. And what sits outside the viewBox is clipped, not drawn
+  (a rect from −4 to 28 came out exactly 24 wide). So a wide symbol has to be
+  scaled to fit 24, and the height it loses comes back at the point of use, in
+  `pixelSize`, not in the file: the speaker is 17.1 units tall of 24 where the
+  bell is 24.0, so it is drawn at 23 in the mute disc and 22 in the audio rows
+  against the 19–20 the rest of the set takes. Ink extents in units of 24, for
+  the next one: bell 22.0×24.0, bell-slash 22.2×24.0, moon-stars 23.1×24.0,
+  power 23.0×23.0, sliders 22.4×22.2, check 20.2×20.1, lock 16.0×23.0, back and
+  forward 11.5×20.4 each, close 12.2×12.2. The volume ramp: speaker 12.0×17.1,
+  low 16.6×17.1, medium 20.3×17.1, high 24.0×22.3, slash 18.4×18.6 — the cone is
+  17.1 in the first three because it is the *same* cone at the same place on the
+  shared canvas, so the ramp gains waves without the speaker moving or resizing.
+  Only `high` breaks it, its outer wave reaching past the cone on both axes.
+- **Outline in the panels, fill in the bar.** The user's rule: everything in the
+  control centre is an outline variant (`bell`, `moon.stars`, `switch.2`), and a
+  symbol that lands in the bar itself takes the filled one. A symbol needed in
+  both places is two files, not one — which is why the volume ramp is ten files
+  and `VolumeIcons` in `lib/icons.ts` has two of everything.
+- **The speaker is a ramp, not an icon.** How many waves is how loud
+  (`volumeIcon` in `lib/audio.ts`), stepped on the rounded percentage the label
+  shows so the glyph and the number never disagree. `speaker.wave.1/2/3` are
+  three steps where the design's own OSD had two, and the bare `speaker` is
+  0% — and also what an audio *row* wears, since a row is a device and a wave on
+  it would be read as a level.
 - **A soft-looking icon here is sub-pixel geometry, not a rendering fault.** Cairo
   already antialiases by exact coverage — GTK's raster at 19px is within 2/255 of
   a 152px render downsampled 8×8, so there is nothing for a PNG (or for
@@ -237,6 +283,27 @@ the sources behind the waybar setup this replaces, plus the notification daemon.
   buttons stop the press before it bubbles up (verified on the toast and on the
   list row — the ✕ closes with `DISMISSED_BY_USER` and emits no `ActionInvoked`
   beside it). No need to fence a click target off from the buttons inside it.
+- **`can-target: false` takes a widget's children with it.** `gtk_widget_pick`
+  returns nothing for a widget that cannot be targeted and never looks inside
+  it, so an overlay of type with a button in it is either all clickable or none
+  of it. That is the shape of the volume bar: the scale is the overlay's main
+  child, the type sits over it in a box that cannot be targeted — a press
+  anywhere along the row reaches the scale under it — and the mute disc and the
+  caret are overlay children of their own, aligned to the two ends so each takes
+  only its own width. `gtk_widget_pick` also picks the overlay child over the
+  main one, which is why those two ends are not draggable.
+- **A `Gtk.Scale` is the whole capsule, not a control inside one.** The bar's
+  fill is the scale's own `highlight` node with the theme's trough, handle and
+  margins reset (`style.scss`), which is what buys the drag, the click-to-
+  position and the scroll without a gesture of the bar's own. Two things follow:
+  the handle needs `min-width: 0` or the fill stops that far short of both ends,
+  and the highlight keeps the pill radius rather than the design's square right
+  edge, since GTK does not clip a node to its parent's rounded box and the
+  corner would sit outside the capsule at full volume. **`change-value` is the
+  user's own** — `value-changed` and `notify::value` also fire for a
+  programmatic move, so writing the volume from those feeds the reading back
+  into the source it came from, and a bar drawing 0 because it is muted would
+  write that 0 over the volume behind it.
 - **A `scrolledwindow` takes its content through the `child` property, not as a
   JSX child.** gnim's generic append path ends in `vfunc_add_child`, which for a
   scrolled window parents the widget without telling it — GTK then measures a

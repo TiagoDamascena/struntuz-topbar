@@ -21,6 +21,12 @@ NixOS the whole thing is one `enable = true`.
 - **Do not disturb** — one switch in the control centre. Cards stop appearing and
   the badge comes off the bar; what arrives still goes to the list, so nothing is
   lost. The switch is remembered across restarts.
+- **Volume** — a bar across the control centre, filled to where the volume is.
+  Drag it, click along it or scroll it; the disc on the left mutes, and the
+  caret at the far end opens the output menu, which lists everything that can
+  play sound and switches to the one you pick. The speaker on the bar itself
+  says where the sound is going and opens that menu in one click, and its waves
+  are how loud it is — none at 0%, three at the top, a slash when muted.
 - **Night light** — the tile beside it, warming the display through
   [hyprsunset](https://github.com/hyprwm/hyprsunset) by default. It runs
   commands, so any other filter does as well, and it reads the temperature back
@@ -38,6 +44,8 @@ default.
 - **hyprsunset**, running, for the night light tile as configured out of the box.
   Point `nightLight` at another filter if you use one; the tile stays either way
   and only says the command failed.
+- **PipeWire** with **WirePlumber**, for the volume bar. Without it the bar
+  leaves the row out rather than showing one that cannot move.
 - No other notification daemon running, since only one process can own
   `org.freedesktop.Notifications`.
 
@@ -124,6 +132,7 @@ programs.struntuz-topbar = {
     userAvatar = "~/Pictures/me.png";
     toastTimeout = 6800;
     toastLimit = 3;
+    volumeStep = 5;
 
     powerCommands = {
       lock = "loginctl lock-session";
@@ -199,6 +208,7 @@ warns and uses the defaults.
   "userAvatar": "",
   "toastTimeout": 6800,
   "toastLimit": 3,
+  "volumeStep": 5,
   "powerCommands": {
     "lock": "loginctl lock-session",
     "suspend": "systemctl suspend",
@@ -225,6 +235,7 @@ warns and uses the defaults.
 | `userAvatar` | `""` | Picture on the avatar; `~/` is expanded. Empty uses `~/.face`, and no file at all falls back to the name's initial. |
 | `toastTimeout` | `6800` | How long a notification card stays up, in ms, when its sender asked for no timeout. |
 | `toastLimit` | `3` | How many cards stack up before the oldest leaves the screen. It stays in the list. |
+| `volumeStep` | `5` | How far a scroll or an arrow key moves the volume bar, in percent. Held to 1–100. |
 | `powerCommands` | see above | One shell command per entry of the power menu, each overridable on its own. |
 | `nightLight` | see above | The blue light filter. `%d` in `on` and `off` is the temperature the command has to leave the display at: `temperature` turning on, `neutral` turning off. `status` prints where it is now, and is read against `neutral` — below it is on. |
 

@@ -31,6 +31,7 @@ export interface Config {
   userAvatar: string
   toastTimeout: number
   toastLimit: number
+  volumeStep: number
   powerCommands: PowerCommands
   nightLight: NightLight
 }
@@ -56,6 +57,9 @@ export const DEFAULTS: Config = {
   toastTimeout: 6800,
   // How far down the screen the stack may reach before the oldest card goes.
   toastLimit: 3,
+  // How far a scroll or an arrow key moves the volume, in percent. The design's
+  // own step, and the one every keyboard's volume keys take.
+  volumeStep: 5,
   powerCommands: {
     lock: "loginctl lock-session",
     suspend: "systemctl suspend",
@@ -129,6 +133,7 @@ function merge(raw: Record<string, unknown>): Config {
     userAvatar: str(raw.userAvatar, DEFAULTS.userAvatar),
     toastTimeout: num(raw.toastTimeout, DEFAULTS.toastTimeout),
     toastLimit: num(raw.toastLimit, DEFAULTS.toastLimit),
+    volumeStep: num(raw.volumeStep, DEFAULTS.volumeStep),
     powerCommands: powerCommands(raw.powerCommands),
     nightLight: nightLight(raw.nightLight),
   }

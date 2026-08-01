@@ -19,6 +19,19 @@ export interface Strings {
   // `%d` is the colour temperature the display is at, in kelvin.
   nightLightKelvin: string
 
+  volume: string
+  volumeMuted: string
+  // `%d` is how loud the default output is, in percent.
+  volumePercent: string
+  volumeMute: string
+  volumeUnmute: string
+
+  audio: string
+  audioOutput: string
+  // The bar segment's tooltip. `%s` is where the sound is going, or that there
+  // is none.
+  audioTooltip: string
+
   notifications: string
   notificationsClear: string
   notificationsEmpty: string
@@ -64,6 +77,16 @@ const EN: Strings = {
   nightLightOff: "Off",
   nightLightKelvin: "%d K",
 
+  volume: "Volume",
+  volumeMuted: "Muted",
+  volumePercent: "%d%",
+  volumeMute: "Mute",
+  volumeUnmute: "Unmute",
+
+  audio: "Audio",
+  audioOutput: "Output device",
+  audioTooltip: "Sound — %s",
+
   notifications: "Notifications",
   notificationsClear: "Clear all",
   notificationsEmpty: "Nothing new",
@@ -105,6 +128,16 @@ const PT_BR: Partial<Strings> = {
   nightLight: "Luz noturna",
   nightLightOff: "Desligada",
   nightLightKelvin: "%d K",
+
+  volume: "Volume",
+  volumeMuted: "Mudo",
+  volumePercent: "%d%",
+  volumeMute: "Silenciar",
+  volumeUnmute: "Ativar o som",
+
+  audio: "Áudio",
+  audioOutput: "Dispositivo de saída",
+  audioTooltip: "Som — %s",
 
   notifications: "Notificações",
   notificationsClear: "Limpar tudo",

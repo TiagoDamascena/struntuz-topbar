@@ -336,6 +336,203 @@ $clock-size: 16px;
   color: $accent-text;
 }
 
+// The volume bar. One capsule the width of the panel, filled to where the
+// volume is, with the type over the fill — so the bar is the control and the
+// label, not a label with a control under it.
+.slider-pill {
+  // 48px in the design, less the edge GTK adds on top of the content box.
+  min-height: 46px;
+  border: 1px solid $pill-edge;
+  border-radius: $pill;
+  background-color: $panel-bg;
+}
+
+// The same bar inside the audio menu is a well in a panel rather than a panel
+// of its own, so the design lightens it where the free-standing one darkens.
+.slider-pill.inset {
+  background-color: rgba(233, 233, 237, 0.05);
+}
+
+// The scale is the whole capsule, so everything the theme draws on one comes
+// off first: its own inset trough, its raised handle, the margins that leave
+// room for both.
+.slider-pill scale {
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.slider-pill trough {
+  min-height: 46px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: $pill;
+  // The pill's own fill is what shows through: the trough is the shape the
+  // highlight is measured in, not a surface of its own.
+  background-color: transparent;
+  background-image: none;
+  box-shadow: none;
+}
+
+// Where the volume is. It takes the pill's radius rather than the design's
+// square right edge: GTK does not clip a node to its parent's rounded box, so a
+// square corner would sit outside the capsule at full volume.
+.slider-pill highlight {
+  border: 0;
+  border-radius: $pill;
+  background-color: rgba(145, 132, 217, 0.5);
+  background-image: none;
+  box-shadow: none;
+}
+
+// No handle: what the design shows is the edge of the fill, and a handle of any
+// width would also hold the fill that far short of both ends.
+.slider-pill slider {
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  border: 0;
+  background-color: transparent;
+  background-image: none;
+  box-shadow: none;
+}
+
+// The type over the bar. Its left margin is the room the disc takes — 6px in,
+// 36px across, and the 9px the design leaves after it.
+.slider-face {
+  margin-left: 51px;
+  margin-right: 14px;
+  transition: margin-right 140ms ease;
+}
+
+// The caret is only there under the pointer, and the value slides over to make
+// room for it. Both halves are the stylesheet's: GTK animates a margin like any
+// other CSS property, so nothing in the widget has to know about the pointer.
+.slider-pill:hover .slider-face {
+  margin-right: 42px;
+}
+
+// Nothing to open from the menu's own copy of the bar, so nothing moves.
+.slider-pill.inset:hover .slider-face {
+  margin-right: 14px;
+}
+
+.slider-label {
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.slider-value {
+  font-size: 15px;
+  font-weight: 500;
+  color: $text-dim;
+}
+
+// The mute disc, lit the other way round from a tile's: sound is the state
+// that is on here, and silence is the one that empties the bar.
+.slider-icon {
+  @extend %bare-button;
+  min-width: 36px;
+  min-height: 36px;
+  border-radius: $pill;
+  background-color: $accent;
+  color: #161826;
+  transition:
+    background-color 150ms ease,
+    color 150ms ease;
+}
+
+.slider-icon.muted {
+  background-color: rgba(233, 233, 237, 0.1);
+  color: rgba(233, 233, 237, 0.65);
+}
+
+// A ring rather than a fill: the disc is already the brightest thing on the
+// bar, so there is nothing left to light it up with.
+.slider-icon:hover {
+  box-shadow: 0 0 0 3px rgba(145, 132, 217, 0.45);
+}
+
+.slider-caret {
+  @extend %bare-button;
+  min-width: 24px;
+  min-height: 24px;
+  color: $text-faint;
+  opacity: 0;
+  transition:
+    opacity 140ms ease,
+    color 150ms ease;
+}
+
+.slider-pill:hover .slider-caret {
+  opacity: 1;
+}
+
+.slider-caret:hover {
+  color: $text;
+}
+
+// What the volume menu lists under the bar. The section label is the design's
+// way of saying the list is one kind of thing, and the rule after it runs out
+// rather than reaching the edge.
+.audio-section {
+  padding: 6px 10px 8px;
+}
+
+.audio-section-label {
+  font-size: 14px;
+  color: $text-dim;
+}
+
+.audio-section-rule {
+  min-height: 1px;
+  background-image: linear-gradient(to right, $divider, transparent 88%);
+}
+
+// A device. Same rounded rectangle as a power row, and the one that is playing
+// is tinted rather than only ticked — the check says which, the tint says it
+// from across the panel.
+.audio-row {
+  @extend %bare-button;
+  min-height: 56px;
+  padding: 0 12px;
+  border-radius: 20px;
+  color: $text;
+  transition: background-color 150ms ease;
+}
+
+.audio-row:hover {
+  background-color: $row-hover;
+}
+
+.audio-row.current {
+  background-color: rgba(145, 132, 217, 0.16);
+}
+
+.audio-row.current:hover {
+  background-color: rgba(145, 132, 217, 0.26);
+}
+
+// A bare glyph, not a disc: the row already carries a tint of its own, and a
+// second shape under the icon would read as a button inside it.
+.audio-row-icon {
+  color: $text-dim;
+}
+
+.audio-row.current .audio-row-icon {
+  color: $accent-text;
+}
+
+.audio-row-name {
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.audio-row-check {
+  color: $accent-text;
+}
+
 // The disc every notification wears, in the list and on a toast. It is the
 // accent's own tint rather than the neutral the power rows use: a notification
 // arrived from somewhere, and the colour is what says so at a glance.
@@ -523,7 +720,11 @@ $clock-size: 16px;
   color: $accent-on;
 }
 
-.power-menu {
+// The design gives every sub-panel the same shape — a back arrow, what it is,
+// what it is currently at — whichever of them replaced the main view. Hence the
+// four classes below rather than the power menu's own: the audio menu wears
+// them too.
+.submenu {
   padding: 8px 10px 10px;
 }
 
@@ -531,7 +732,7 @@ $clock-size: 16px;
 // gradient. It lines up with the rows below it, not with the panel: both sit on
 // the panel's 10px of side padding. Stronger than `$pill-edge` on purpose — the
 // ends fade out, so a hairline at the panel's own alpha would read as nothing.
-.power-head {
+.submenu-head {
   padding: 6px 4px 11px;
   margin-bottom: 8px;
   background-image: linear-gradient(
@@ -546,12 +747,12 @@ $clock-size: 16px;
   background-repeat: no-repeat;
 }
 
-.power-title {
+.submenu-title {
   font-size: 17px;
   font-weight: 500;
 }
 
-.power-subtitle {
+.submenu-subtitle {
   font-size: 13px;
   color: $accent-text;
 }

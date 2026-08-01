@@ -1,9 +1,10 @@
 import app from "ags/gtk4/app"
 import { Astal, Gtk, Gdk } from "ags/gtk4"
-import { createState } from "ags"
+import { createComputed, createState } from "ags"
 import Clock from "./Clock"
-import ControlCenter from "./ControlCenter"
+import ControlCenter, { type View } from "./ControlCenter"
 import ControlCenterButton from "./ControlCenterButton"
+import Segments from "./Segments"
 import Toasts from "./Toasts"
 import Workspaces from "./Workspaces"
 
@@ -13,8 +14,27 @@ export default function Bar(gdkmonitor: Gdk.Monitor) {
   // One control centre per monitor, opened by that monitor's own button, so the
   // panel always comes down from the bar that was clicked.
   const [open, setOpen] = createState(false)
-  ControlCenter({ gdkmonitor, open, close: () => setOpen(false) })
+  // Which panel it comes down on. The bar owns it because the bar has two ways
+  // in: the toggle, which opens the main view, and a segment, which opens the
+  // sub-panel it stands for and lights up while that one is showing.
+  const [view, setView] = createState<View>("main")
+
+  function show(next: View) {
+    setView(next)
+    setOpen(true)
+  }
+
+  function hide() {
+    setView("main")
+    setOpen(false)
+  }
+
+  ControlCenter({ gdkmonitor, open, view, setView, close: () => setOpen(false) })
   Toasts({ gdkmonitor, hidden: open })
+
+  // Lit only while the panel is showing what it opens, so the toggle and the
+  // segments never read as two things being open at once.
+  const showingMain = createComputed(() => open() && view() === "main")
 
   return (
     <window
@@ -37,7 +57,11 @@ export default function Bar(gdkmonitor: Gdk.Monitor) {
           <Clock />
         </box>
         <box $type="end" spacing={8} valign={Gtk.Align.CENTER} halign={Gtk.Align.END}>
-          <ControlCenterButton open={open} onToggle={() => setOpen(!open.get())} />
+          <Segments open={open} view={view} onOpen={show} onClose={hide} />
+          <ControlCenterButton
+            active={showingMain}
+            onToggle={() => (showingMain.get() ? hide() : show("main"))}
+          />
         </box>
       </centerbox>
     </window>

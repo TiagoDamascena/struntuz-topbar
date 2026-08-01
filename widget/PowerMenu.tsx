@@ -34,8 +34,8 @@ export default function PowerMenu(props: {
   onRun: () => void
 }) {
   return (
-    <box class="panel power-menu" orientation={Gtk.Orientation.VERTICAL} visible={props.visible}>
-      <box class="power-head" spacing={10}>
+    <box class="panel submenu" orientation={Gtk.Orientation.VERTICAL} visible={props.visible}>
+      <box class="submenu-head" spacing={10}>
         <button
           class="icon-button"
           tooltipText={t.back}
@@ -45,8 +45,8 @@ export default function PowerMenu(props: {
           <image iconName={Icons.back} pixelSize={18} />
         </button>
         <box orientation={Gtk.Orientation.VERTICAL} valign={Gtk.Align.CENTER}>
-          <label class="power-title" label={t.power} xalign={0} />
-          <label class="power-subtitle" label={sessionStatus()} xalign={0} />
+          <label class="submenu-title" label={t.power} xalign={0} />
+          <label class="submenu-subtitle" label={sessionStatus()} xalign={0} />
         </box>
       </box>
       <box orientation={Gtk.Orientation.VERTICAL} spacing={2}>

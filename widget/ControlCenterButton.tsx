@@ -5,7 +5,9 @@ import { dontDisturb, notificationCount } from "../lib/notifications"
 import { t } from "../lib/i18n"
 
 export default function ControlCenterButton(props: {
-  open: Accessor<boolean>
+  // Whether the panel is showing the main view — the one this button opens.
+  // A sub-panel is a segment's to light up, not this one's.
+  active: Accessor<boolean>
   onToggle: () => void
 }) {
   // Do-not-disturb takes the count off the bar as well as the cards off the
@@ -17,7 +19,7 @@ export default function ControlCenterButton(props: {
     <overlay>
       <box class="pill icon-pill" valign={Gtk.Align.CENTER}>
         <button
-          class={props.open.as((open) => (open ? "icon-button open" : "icon-button"))}
+          class={props.active.as((open) => (open ? "icon-button open" : "icon-button"))}
           tooltipText={count.as((n) =>
             n > 0 ? `${t.controlCenter} · ${n} ${t.notifications.toLowerCase()}` : t.controlCenter,
           )}

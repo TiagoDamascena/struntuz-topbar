@@ -1,13 +1,15 @@
 import app from "ags/gtk4/app"
 import { Astal, Gdk, Gtk } from "ags/gtk4"
-import { Accessor, createState } from "ags"
+import { Accessor } from "ags"
 import { Icons } from "../lib/icons"
 import { batteryStatus, userAvatar, userInitial, userName } from "../lib/session"
 import { t } from "../lib/i18n"
+import AudioMenu from "./AudioMenu"
 import DoNotDisturb from "./DoNotDisturb"
 import NightLight from "./NightLight"
 import Notifications from "./Notifications"
 import PowerMenu from "./PowerMenu"
+import Volume from "./Volume"
 import { readNightLight } from "../lib/nightlight"
 
 // The design's own geometry: the panel hangs 66px below the top of the screen,
@@ -57,20 +59,26 @@ function UserPill(props: { visible: Accessor<boolean>; onPower: () => void }) {
   )
 }
 
+// A sub-panel replaces the main view rather than stacking under it, as in the
+// design, so the panel is only ever showing one of these. It is the bar's state
+// and not this window's: the bar's segments open the panel straight onto a
+// sub-panel, so what is showing has to be readable from up there.
+export type View = "main" | "power" | "audio"
+
 export default function ControlCenter(props: {
   gdkmonitor: Gdk.Monitor
   open: Accessor<boolean>
+  view: Accessor<View>
+  setView: (view: View) => void
   close: () => void
 }) {
   const { TOP, BOTTOM, LEFT, RIGHT } = Astal.WindowAnchor
-  const [menu, setMenu] = createState(false)
 
-  // The power menu replaces the main view rather than stacking under it, as in
-  // the design, so the two are one choice.
-  const main = menu.as((open) => !open)
+  const showing = (name: View) => props.view.as((current) => current === name)
+  const main = showing("main")
 
   function dismiss() {
-    setMenu(false)
+    props.setView("main")
     props.close()
   }
 
@@ -116,7 +124,7 @@ export default function ControlCenter(props: {
           marginTop={PANEL_TOP}
           marginEnd={PANEL_SIDE}
         >
-          <UserPill visible={main} onPower={() => setMenu(true)} />
+          <UserPill visible={main} onPower={() => props.setView("power")} />
           {/* The design's tile grid, between the user pill and the
               notifications: two columns of equal width, which is what
               `homogeneous` gives whatever the labels measure. */}
@@ -124,10 +132,12 @@ export default function ControlCenter(props: {
             <DoNotDisturb />
             <NightLight />
           </box>
+          <Volume visible={main} onOpen={() => props.setView("audio")} />
           {/* Closing on a notification's own click: what it invoked is coming
               to the front, and this window covers the whole output. */}
           <Notifications visible={main} close={dismiss} />
-          <PowerMenu visible={menu} onBack={() => setMenu(false)} onRun={dismiss} />
+          <AudioMenu visible={showing("audio")} onBack={() => props.setView("main")} />
+          <PowerMenu visible={showing("power")} onBack={() => props.setView("main")} onRun={dismiss} />
         </box>
       </overlay>
     </window>
