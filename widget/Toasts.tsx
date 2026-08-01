@@ -7,18 +7,16 @@ import { Icons } from "../lib/icons"
 import { activate, notificationActions, timeAgo, toasts, type Notification } from "../lib/notifications"
 import { t } from "../lib/i18n"
 import NotificationIcon from "./NotificationIcon"
+import { PANEL_SIDE, PANEL_TOP } from "../lib/layout"
 
-// The design's own geometry: the stack hangs from the same 66px as the control
-// centre, 14px in from the right, in a column a little narrower than the panels
-// under it.
-const TOP = 66
-const SIDE = 14
-const WIDTH = 436
+// The stack hangs from the same offset as the control centre (`lib/layout.ts`),
+// in a column a little narrower than the panels that land under it.
+const WIDTH = 384
 
 // Wrapped rather than ellipsized: the body is what a notification is for. Three
 // lines is where a card stops being a card.
 const BODY_LINES = 3
-const BODY_CHARS = 40
+const BODY_CHARS = 38
 
 function Toast(n: Notification) {
   const actions = notificationActions(n)
@@ -33,7 +31,7 @@ function Toast(n: Notification) {
       transitionType={Gtk.RevealerTransitionType.CROSSFADE}
       transitionDuration={220}
     >
-      <box class="panel toast" spacing={12}>
+      <box class="panel toast" spacing={10}>
         {/* On the whole card, buttons and all: a GTK4 button claims the
             sequence, which stops it before it bubbles up to here, so the ✕ and
             the actions still only do their own. */}
@@ -60,7 +58,7 @@ function Toast(n: Notification) {
               // user meant, so the notification leaves the list too.
               onClicked={() => n.dismiss()}
             >
-              <image iconName={Icons.close} pixelSize={13} />
+              <image iconName={Icons.close} pixelSize={12} />
             </button>
           </box>
           <label
@@ -119,11 +117,11 @@ export default function Toasts(props: { gdkmonitor: Gdk.Monitor; hidden: Accesso
       exclusivity={Astal.Exclusivity.IGNORE}
       keymode={Astal.Keymode.NONE}
       anchor={ANCHOR_TOP | RIGHT}
-      marginTop={TOP}
-      marginRight={SIDE}
+      marginTop={PANEL_TOP}
+      marginRight={PANEL_SIDE}
       application={app}
     >
-      <box orientation={Gtk.Orientation.VERTICAL} spacing={10} widthRequest={WIDTH}>
+      <box orientation={Gtk.Orientation.VERTICAL} spacing={8} widthRequest={WIDTH}>
         <For each={stack} id={(n) => n.id}>
           {(n) => Toast(n)}
         </For>

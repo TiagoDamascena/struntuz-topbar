@@ -46,8 +46,6 @@ export const Icons = {
   power: "struntuz-power-symbolic",
   restart: "struntuz-restart-symbolic",
   suspend: "struntuz-moon-symbolic",
-  // The bare speaker, for a row that is an output rather than a level.
-  output: "struntuz-speaker-symbolic",
 } as const
 
 // The volume ramp: how many waves is how loud, so the glyph carries the number
@@ -91,6 +89,8 @@ const SOURCES: Record<string, string> = {
   [Icons.power]: power,
   [Icons.restart]: restart,
   [Icons.suspend]: moon,
+  // The bare speaker is only the ramp's 0% now — the audio menu's rows wear
+  // `high`, since a device in that list is never the silent one.
   [VolumeIcons.outline.silent]: speaker,
   [VolumeIcons.outline.low]: speakerLow,
   [VolumeIcons.outline.medium]: speakerMedium,

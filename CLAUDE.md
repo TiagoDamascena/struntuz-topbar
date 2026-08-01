@@ -38,6 +38,16 @@ Entry is `app.ts` → `app.start` renders one `Bar` window per monitor.
 that talks to a data source belongs in a `lib/` module with no UI, as in the
 greeter.
 
+- **`lib/layout.ts`** — where the bar sits and where everything hanging off it
+  starts. The control centre and the toasts are in windows that ignore the
+  exclusive zone, so they are placed from the top of the *output* and their
+  offset is only ever the bar's margin plus its height plus a gap — three
+  numbers that used to be written out per window and drifted the moment the bar
+  moved. The side margin is the compositor's own `gaps_out` (10 here): Hyprland
+  draws a window's border outside the box it reports, so a tiled window's
+  visible edge is at `gaps_out` from the output, and a pill has no border
+  outside its box to make up a difference. Not in `lib/config.ts` yet, so a
+  setup with other gaps has to edit this.
 - **`lib/config.ts`** — the single source of runtime settings, read from
   `$STRUNTUZ_TOPBAR_CONFIG`, else `$XDG_CONFIG_HOME/struntuz-topbar/config.json`,
   else built-in defaults. Merged per key, so an invalid value costs only its own
@@ -98,11 +108,15 @@ greeter.
   `hasAudio()` is what the widgets check before rendering anything, and
   `volumeIcon` is what picks the glyph, since the speaker is a ramp (below).
   Which panel the control centre comes down on lives in `widget/Bar.tsx`, not in
-  the window: `widget/Segments.tsx` is the design's pill of one round button per
-  source, and a segment both opens the panel onto its own sub-panel and stays
-  lit while that one is showing, which it cannot do from below. The toggle
-  beside it is lit only on the main view for the same reason — two lit buttons
-  would read as two things being open.
+  the window: `widget/Segments.tsx` is the design's one round button per source,
+  and a segment both opens the panel onto its own sub-panel and stays lit while
+  that one is showing, which it cannot do from below. The toggle beside it is
+  lit only on the main view for the same reason — two lit buttons would read as
+  two things being open. Both live in one capsule, `widget/Controls.tsx`: the
+  design draws them as two pills and the user asked for one, since everything in
+  there opens the same panel and two capsules said they were two places to go.
+  That file owns the badge as well, because the toggle is the last thing in the
+  pill and so the pill's own top-right corner is the toggle's.
 - **`lib/image.ts`** — one crop, shared by every round picture in the bar: the
   centred square a `Gtk.Image` needs before a `border-radius` can read as a
   circle.
@@ -123,9 +137,30 @@ The design is a Claude Design project ("Interface Linux minimalista roxa",
 transparent 44px strip of independent floating pills, not one continuous bar —
 hence the shared `.pill` class in `style.scss`.
 
+**The bar is drawn a step below the design's own scale.** `$pill-height` is 40
+where the design says 44, and every size in the stylesheet was moved with it —
+44px of bar on a 1080p output reads as a band rather than as something to glance
+at. So a number taken from the design has to be brought down before it is used,
+and the ratios are what to preserve, not the values: the panel column is 400 and
+not 452, a tile is 56 and not 72, the type runs 12–15 where the design runs
+13–17. `lib/layout.ts` carries `$pill-height` a second time, since the windows
+that hang under the bar are placed from the top of the output.
+
+The height went to 36 first and came back up, which is worth knowing before
+taking it down again: 36 is small enough that a round button in the pill has no
+room left around its glyph, and no amount of padding gives it back (see the
+concentricity note below). 40 is where the ends of the pill and the gap between
+two glyphs measure the same, at 12–14px.
+
+The panel rules are one `@mixin rule` in `style.scss` and not a gradient per
+head. They were written out three times and the audio menu's had drifted into a
+different line — solid at one end where the heads fade at both, and stopping
+10px short of where a head's does, because it sat inside a padding the heads
+did not have.
+
 The bar it replaces is the user's waybar (`~/.config/waybar/`), and that is the
 other source: `widget/Workspaces.tsx` takes its shape from the design (a dot per
-workspace, the focused one stretched to 26px) and its state colours from waybar's
+workspace, the focused one stretched into a bar) and its state colours from waybar's
 Catppuccin palette, since those are the ones already learned. Check waybar's
 `config` and `style.css` before inventing behaviour for a new item — but check
 the pair's contrast too: waybar's own occupied/empty colours are 1.73:1, which
@@ -165,11 +200,32 @@ the sources behind the waybar setup this replaces, plus the notification daemon.
   `namespace=struntuz-topbar` — hence `namespace` on the window is load-bearing,
   not decoration.
 - **GTK sizes `min-height` against the content box**, so a 1px border adds on top
-  of it, while the design's CSS counts the border inside its 44px. `.pill`
+  of it, while the design's CSS counts the border inside its height. `.pill`
   subtracts the edge; measure with `hyprctl layers -j` after changing it. Padding
-  goes on top the same way, which is what turns a badge into a capsule: a 16px
-  `min-width` with 4px a side measures 24 and only the height stays 16, so
+  goes on top the same way, which is what turns a badge into a capsule: a
+  `min-width` with 4px a side measures 8 wider and only the height stays, so
   anything that has to come out a circle carries no padding at all.
+- **A round thing inside a capsule has to be concentric with the cap, not
+  padded from the edge.** A capsule's end is an arc whose centre sits one radius
+  in from the edge, so a disc is only evenly ringed when its own centre lands on
+  that point — `padding-left = height/2 − disc/2 − border`. Pad it by eye
+  instead and the ring comes out thinner top-to-bottom than it is at the far
+  end, which is what "the border radius doesn't match the circle" looks like
+  (the mute disc measured 3px against 5.5px, and the eye caught it before any
+  measurement did). It also means **horizontal padding is not the lever for
+  giving a round button more room** in a pill: padding only slides the button
+  off the arc centre, and the clearance from the *glyph* to the edge works out
+  to `height/2 − glyph/2` for any concentric button, whatever the padding and
+  the button size are. So room comes from a smaller glyph or a taller pill, and
+  nothing else — which is why fixing the disc's ring took `$pill-height` from 36
+  to 40 and `.slider-pill` from 38 to 42 rather than another padding. Verified
+  by measurement both times: the disc now sits at offset 0.0px with a 5px ring
+  top, bottom and left. What the padding/button split *does* decide is how that
+  fixed distance is divided between the inside of the lit circle and the ring
+  around it — `.icon-pill` runs 4px against a 30px button, which puts 7–8px
+  inside the circle and 5px outside. Growing the button also pushes the glyphs
+  apart, so the gap between two of them in a pill (18px at 30) runs wider than
+  the gap at the ends (11–14px); `spacing` on the box is the only trim for it.
 - **Labels of different font sizes don't share a baseline.** Each centres its own
   line box, so 16px beside 17px lands the baselines a pixel apart and reads as
   crooked; `valign`/`baselinePosition` do not fix it (verified on all four
@@ -207,8 +263,8 @@ the sources behind the waybar setup this replaces, plus the notification daemon.
   (a rect from −4 to 28 came out exactly 24 wide). So a wide symbol has to be
   scaled to fit 24, and the height it loses comes back at the point of use, in
   `pixelSize`, not in the file: the speaker is 17.1 units tall of 24 where the
-  bell is 24.0, so it is drawn at 23 in the mute disc and 22 in the audio rows
-  against the 19–20 the rest of the set takes. Ink extents in units of 24, for
+  bell is 24.0, so it is drawn at 20 in the mute disc, 18 in the audio rows and
+  17 in the bar, against the 15–18 the rest of the set takes. Ink extents in units of 24, for
   the next one: bell 22.0×24.0, bell-slash 22.2×24.0, moon-stars 23.1×24.0,
   power 23.0×23.0, sliders 22.4×22.2, check 20.2×20.1, lock 16.0×23.0, back and
   forward 11.5×20.4 each, close 12.2×12.2. The volume ramp: speaker 12.0×17.1,
@@ -224,9 +280,13 @@ the sources behind the waybar setup this replaces, plus the notification daemon.
 - **The speaker is a ramp, not an icon.** How many waves is how loud
   (`volumeIcon` in `lib/audio.ts`), stepped on the rounded percentage the label
   shows so the glyph and the number never disagree. `speaker.wave.1/2/3` are
-  three steps where the design's own OSD had two, and the bare `speaker` is
-  0% — and also what an audio *row* wears, since a row is a device and a wave on
-  it would be read as a level.
+  three steps where the design's own OSD had two, and the bare `speaker` is 0%.
+  An audio *row* wears `wave.3`, the top of the ramp, and not the bare one it
+  started on: a row is a device rather than a level, so it carries no level to
+  read — and read as one anyway, the bare cone is the glyph for something
+  silent, which is the one thing a device in that list never is. It is the cone
+  that has to line up down a column of rows, so a row's `pixelSize` is stepped
+  off the 17.1 units the cone fills and not off what `high` adds past it.
 - **A soft-looking icon here is sub-pixel geometry, not a rendering fault.** Cairo
   already antialiases by exact coverage — GTK's raster at 19px is within 2/255 of
   a 152px render downsampled 8×8, so there is nothing for a PNG (or for

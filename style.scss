@@ -31,8 +31,36 @@ $pill-edge: rgba(233, 233, 237, 0.09);
 // The rule inside a panel, which fades out at both ends and so needs a stronger
 // middle than the edge that runs all the way round a shape.
 $divider: rgba(233, 233, 237, 0.16);
-$pill-height: 44px;
+// The design draws the strip at 44. This is that strip taken down a step: the
+// bar is a place to glance at, and 44px of it on a 1080p output is a band. Every
+// size below moves with it, so the proportions stay the design's — and
+// `lib/layout.ts` carries the same number, since what hangs under the bar is
+// positioned from the top of the output rather than from under the bar.
+//
+// It is 40 and not the 36 it went to first because the height is the only thing
+// that buys a round button room inside a pill: concentric with the cap, the
+// space from a glyph to the edge is `height/2 - glyph/2`, which neither padding
+// nor a smaller button moves. At 36 the speaker had 9.5px and read as cramped.
+$pill-height: 40px;
 $pill: 999px;
+
+// One rule, wherever a panel needs one. It is a background and not a border
+// because a border cannot carry a gradient, and it fades out at both ends
+// rather than reaching the edge, so it reads as a separation and not as a box.
+// Stronger than `$pill-edge` on purpose: the ends fade, so a hairline at the
+// panel's own alpha would read as nothing.
+@mixin rule {
+  background-image: linear-gradient(
+    to right,
+    transparent 0%,
+    $divider 18%,
+    $divider 82%,
+    transparent 100%
+  );
+  background-size: 100% 1px;
+  background-position: bottom;
+  background-repeat: no-repeat;
+}
 
 // Much heavier than $pill-bg, and not because the design says so — it steps
 // only .55 to .62. What a bar pill sits on is the wallpaper; what a panel sits
@@ -40,7 +68,7 @@ $pill: 999px;
 // thin tint disappeared over a light title bar (verified against a browser),
 // and the fill has to hold the type on its own wherever the panel lands.
 $panel-bg: rgba(22, 24, 38, 0.72);
-$panel-radius: 28px;
+$panel-radius: 22px;
 
 // The workspace dots keep the palette of the waybar this replaces (Catppuccin
 // Mocha) rather than the design's single accent, so the states stay the colours
@@ -69,7 +97,7 @@ window.background {
 
 .pill {
   // GTK sizes min-height against the content box, so the 1px edge would add on
-  // top of it; the design counts the edge inside its 44px.
+  // top of it; the design counts the edge inside its height.
   min-height: $pill-height - 2px;
   border: 1px solid $pill-edge;
   border-radius: $pill;
@@ -93,13 +121,13 @@ window.background {
 }
 
 .workspaces {
-  padding: 0 18px;
+  padding: 0 16px;
 }
 
 .dot {
   @extend %bare-button;
-  min-width: 8px;
-  min-height: 8px;
+  min-width: 7px;
+  min-height: 7px;
   border-radius: $pill;
   transition:
     min-width 220ms cubic-bezier(0.2, 0.8, 0.2, 1),
@@ -107,7 +135,7 @@ window.background {
 }
 
 .dot.active {
-  min-width: 26px;
+  min-width: 22px;
   background-color: $ws-active;
 }
 
@@ -123,14 +151,14 @@ window.background {
   background-color: $ws-hover;
 }
 
-// One size for both runs. The design draws the date at 16px and the time at 17,
-// but each label centres its own line box, so the 1px difference lands their
+// One size for both runs. The design draws the date and the time a pixel apart,
+// but each label centres its own line box, so that difference lands their
 // baselines a pixel apart and reads as crooked; at these sizes it carried no
 // hierarchy anyway, which the weight and the opacity below do on their own.
-$clock-size: 16px;
+$clock-size: 14px;
 
 .clock {
-  padding: 0 20px;
+  padding: 0 18px;
 }
 
 .clock-date {
@@ -147,10 +175,15 @@ $clock-size: 16px;
 // A round icon button: the bar's control-centre toggle, the power button in the
 // user pill, the back arrow in the power menu. The icon is a symbolic SVG, so
 // `color` is what paints it.
+// 30 and not the 26 it started at, against glyphs that did not change: what a
+// lit circle has around its glyph is the button's own size, and at 26 the
+// speaker — 17px wide at the top of its ramp — had 4.5px a side and read as
+// filling the disc. The room comes off the pill's padding, which is why the two
+// numbers move together (see `.icon-pill`).
 .icon-button {
   @extend %bare-button;
-  min-width: 34px;
-  min-height: 34px;
+  min-width: 30px;
+  min-height: 30px;
   border-radius: $pill;
   color: $icon-idle;
   transition:
@@ -159,21 +192,21 @@ $clock-size: 16px;
 }
 
 .icon-button.large {
-  min-width: 44px;
-  min-height: 44px;
+  min-width: 38px;
+  min-height: 38px;
 }
 
 // The two sizes a dismiss cross comes in: on a toast, where it is the card's
 // own control, and on a list row, where it only appears under the pointer.
 .icon-button.small {
-  min-width: 26px;
-  min-height: 26px;
+  min-width: 24px;
+  min-height: 24px;
   color: $text-ghost;
 }
 
 .icon-button.tiny {
-  min-width: 22px;
-  min-height: 22px;
+  min-width: 20px;
+  min-height: 20px;
   color: $text-ghost;
 }
 
@@ -196,10 +229,17 @@ $clock-size: 16px;
   color: $accent-on;
 }
 
-// The pill around a lone round button is 5px of padding, not the 18–20 the ones
-// with type carry — the circle brings its own edge distance.
+// The pill around the round buttons, not the 18 the clock carries — a circle
+// brings its own edge distance. It is not a free number: 4 against a 30px
+// button in a 40px pill puts the button's centre exactly on the cap's arc
+// centre, which is what keeps the lit circle concentric with the end it sits in
+// (see `.slider-icon`). So this and `.icon-button` are one number in two
+// places — `padding + button/2` has to come to 19, and which way the pair is
+// split is how much of the space sits inside the lit circle rather than around
+// it. What neither can change is how far the glyph ends up from the pill's
+// edge: that is `$pill-height` alone.
 .icon-pill {
-  padding: 0 5px;
+  padding: 0 4px;
 }
 
 // How many notifications are waiting, over the button that opens them. The
@@ -208,17 +248,17 @@ $clock-size: 16px;
 // carry at 11px, and lit type that small does not.
 // A count is a disc, not a capsule — and padding is what took it off the
 // circle: GTK adds it outside the box `min-width` sets, the same way a border
-// adds onto `min-height` on `.pill`, so 4px a side made a 16px disc 24px wide.
-// Two digits still fit inside the 16; past that it stretches, which is the right
-// way for it to give.
+// adds onto `min-height` on `.pill`, so 4px a side made a disc half again as
+// wide. Two digits still fit inside the 14; past that it stretches, which is
+// the right way for it to give.
 .badge {
-  min-width: 16px;
-  min-height: 16px;
+  min-width: 14px;
+  min-height: 14px;
   padding: 0;
   border-radius: $pill;
   background-color: $accent;
   color: #161826;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 500;
 }
 
@@ -234,28 +274,30 @@ $clock-size: 16px;
   // The one panel that is still a capsule — it holds a single row, so the
   // design keeps it the shape of the bar above it.
   border-radius: $pill;
-  // Taller than a bar pill: two lines of type beside a 42px avatar.
-  min-height: 64px;
-  padding: 0 10px 0 14px;
+  // Taller than a bar pill: two lines of type beside a 36px avatar.
+  min-height: 54px;
+  // Both ends are a round shape's concentricity with the cap it sits in — 9 for
+  // the 36px avatar, 8 for the 38px power button (see `.slider-icon`).
+  padding: 0 8px 0 9px;
 }
 
 .avatar {
-  min-width: 42px;
-  min-height: 42px;
+  min-width: 36px;
+  min-height: 36px;
   border-radius: $pill;
   background-color: rgba(145, 132, 217, 0.28);
   color: $accent-on;
-  font-size: 17px;
+  font-size: 15px;
   font-weight: 500;
 }
 
 .user-name {
-  font-size: 17px;
+  font-size: 15px;
   font-weight: 500;
 }
 
 .user-status {
-  font-size: 14px;
+  font-size: 13px;
   color: $text-faint;
 }
 
@@ -264,11 +306,13 @@ $clock-size: 16px;
 // lights up in the accent when what it switches is on.
 .tile {
   @extend %bare-button;
-  // 72px in the design, less the edge GTK adds on top of the content box.
-  min-height: 70px;
-  // The disc brings its own edge distance on the left, the way `.power-row` and
-  // `.icon-pill` do; the type on the right does not.
-  padding: 0 14px 0 10px;
+  // The design's 72px brought down with the bar, less the edge GTK adds on top
+  // of the content box.
+  min-height: 56px;
+  // The left is the disc's concentricity with the capsule's cap, not a choice:
+  // half the tile's height less half the disc, less the edge (see `.slider-icon`).
+  // The right is the type's, which has no round shape to line up with.
+  padding: 0 12px 0 10px;
   border: 1px solid $pill-edge;
   border-radius: $pill;
   background-color: $panel-bg;
@@ -290,11 +334,11 @@ $clock-size: 16px;
   background-color: rgba(74, 66, 121, 0.76);
 }
 
-// The lit disc is what carries the state across the room: at 44px it is the
-// largest shape in the panel, and the tile's own fill is a tint either way.
+// The lit disc is what carries the state across the room: it is the largest
+// shape in the panel, and the tile's own fill is a tint either way.
 .tile-icon {
-  min-width: 44px;
-  min-height: 44px;
+  min-width: 36px;
+  min-height: 36px;
   border-radius: $pill;
   background-color: rgba(233, 233, 237, 0.1);
   color: $icon-idle;
@@ -313,7 +357,7 @@ $clock-size: 16px;
 // The weight is said here because the theme's own is bold: everything inside a
 // GTK button inherits it (see `%bare-button`).
 .tile-label {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 500;
   color: $text-dim;
 }
@@ -327,7 +371,7 @@ $clock-size: 16px;
 // reads as one block.
 .tile-sub {
   margin-top: -3px;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 400;
   color: $text-faint;
 }
@@ -340,8 +384,11 @@ $clock-size: 16px;
 // volume is, with the type over the fill — so the bar is the control and the
 // label, not a label with a control under it.
 .slider-pill {
-  // 48px in the design, less the edge GTK adds on top of the content box.
-  min-height: 46px;
+  // The design's 48px brought down with the bar, less the edge GTK adds on top
+  // of the content box. Held at 42 by the disc rather than by the type: the
+  // capsule's radius is 22 and the disc's is 16, which is the 6px ring the
+  // design leaves around it, and nothing but this height can widen that.
+  min-height: 42px;
   border: 1px solid $pill-edge;
   border-radius: $pill;
   background-color: $panel-bg;
@@ -363,7 +410,7 @@ $clock-size: 16px;
 }
 
 .slider-pill trough {
-  min-height: 46px;
+  min-height: 42px;
   margin: 0;
   padding: 0;
   border: 0;
@@ -398,11 +445,11 @@ $clock-size: 16px;
   box-shadow: none;
 }
 
-// The type over the bar. Its left margin is the room the disc takes — 6px in,
-// 36px across, and the 9px the design leaves after it.
+// The type over the bar. Its left margin is the room the disc takes — 5px in,
+// 32px across, and the gap the design leaves after it.
 .slider-face {
-  margin-left: 51px;
-  margin-right: 14px;
+  margin-left: 46px;
+  margin-right: 12px;
   transition: margin-right 140ms ease;
 }
 
@@ -410,21 +457,21 @@ $clock-size: 16px;
 // room for it. Both halves are the stylesheet's: GTK animates a margin like any
 // other CSS property, so nothing in the widget has to know about the pointer.
 .slider-pill:hover .slider-face {
-  margin-right: 42px;
+  margin-right: 36px;
 }
 
 // Nothing to open from the menu's own copy of the bar, so nothing moves.
 .slider-pill.inset:hover .slider-face {
-  margin-right: 14px;
+  margin-right: 12px;
 }
 
 .slider-label {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 500;
 }
 
 .slider-value {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 500;
   color: $text-dim;
 }
@@ -433,8 +480,8 @@ $clock-size: 16px;
 // that is on here, and silence is the one that empties the bar.
 .slider-icon {
   @extend %bare-button;
-  min-width: 36px;
-  min-height: 36px;
+  min-width: 32px;
+  min-height: 32px;
   border-radius: $pill;
   background-color: $accent;
   color: #161826;
@@ -456,8 +503,8 @@ $clock-size: 16px;
 
 .slider-caret {
   @extend %bare-button;
-  min-width: 24px;
-  min-height: 24px;
+  min-width: 22px;
+  min-height: 22px;
   color: $text-faint;
   opacity: 0;
   transition:
@@ -476,18 +523,22 @@ $clock-size: 16px;
 // What the volume menu lists under the bar. The section label is the design's
 // way of saying the list is one kind of thing, and the rule after it runs out
 // rather than reaching the edge.
+// No padding on the right, so the rule ends where the head's does: the head
+// spans the panel's own padding and this row sat 10px inside it, which is what
+// made one line look like a different line from the other. The left inset is
+// the rows' instead, so the label starts over their icons.
 .audio-section {
-  padding: 6px 10px 8px;
+  padding: 6px 0 8px 10px;
 }
 
 .audio-section-label {
-  font-size: 14px;
+  font-size: 13px;
   color: $text-dim;
 }
 
 .audio-section-rule {
   min-height: 1px;
-  background-image: linear-gradient(to right, $divider, transparent 88%);
+  @include rule;
 }
 
 // A device. Same rounded rectangle as a power row, and the one that is playing
@@ -495,9 +546,9 @@ $clock-size: 16px;
 // from across the panel.
 .audio-row {
   @extend %bare-button;
-  min-height: 56px;
-  padding: 0 12px;
-  border-radius: 20px;
+  min-height: 46px;
+  padding: 0 10px;
+  border-radius: 16px;
   color: $text;
   transition: background-color 150ms ease;
 }
@@ -525,7 +576,7 @@ $clock-size: 16px;
 }
 
 .audio-row-name {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 500;
 }
 
@@ -537,16 +588,16 @@ $clock-size: 16px;
 // accent's own tint rather than the neutral the power rows use: a notification
 // arrived from somewhere, and the colour is what says so at a glance.
 .notification-icon {
-  min-width: 34px;
-  min-height: 34px;
+  min-width: 30px;
+  min-height: 30px;
   border-radius: $pill;
   background-color: rgba(145, 132, 217, 0.2);
   color: $accent-text;
 }
 
 .notification-icon.large {
-  min-width: 40px;
-  min-height: 40px;
+  min-width: 34px;
+  min-height: 34px;
 }
 
 // A picture fills the disc, so the tint under it would only show through the
@@ -556,27 +607,17 @@ $clock-size: 16px;
 }
 
 .notifications {
-  padding: 14px 10px 10px;
+  padding: 12px 8px 8px;
   // The empty state is a whole panel's worth of nothing, and the design gives
   // it the same height it would have with rows in it, so the column below does
   // not jump as the last one goes.
-  min-height: 190px;
+  min-height: 150px;
 }
 
-// Same rule as the power menu's, on the same 10px of panel padding.
 .notifications-head {
-  padding: 0 8px 10px;
+  padding: 0 6px 8px;
   margin-bottom: 4px;
-  background-image: linear-gradient(
-    to right,
-    transparent 0%,
-    $divider 18%,
-    $divider 82%,
-    transparent 100%
-  );
-  background-size: 100% 1px;
-  background-position: bottom;
-  background-repeat: no-repeat;
+  @include rule;
 }
 
 .notifications-head-icon {
@@ -584,12 +625,12 @@ $clock-size: 16px;
 }
 
 .notifications-head-label {
-  font-size: 14px;
+  font-size: 13px;
   color: $text-dim;
 }
 
 .notifications-count {
-  font-size: 13px;
+  font-size: 12px;
   color: $accent-text;
 }
 
@@ -599,7 +640,7 @@ $clock-size: 16px;
 .notifications-clear {
   @extend %bare-button;
   padding: 0 2px;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: normal;
   color: $text-faint;
   transition: color 150ms ease;
@@ -611,7 +652,7 @@ $clock-size: 16px;
 
 .notifications-empty {
   color: $text-ghost;
-  font-size: 15px;
+  font-size: 14px;
 }
 
 // The list itself. GTK paints a background behind a scrolled view; the panel
@@ -621,8 +662,8 @@ $clock-size: 16px;
 }
 
 .notification-row {
-  padding: 11px 10px;
-  border-radius: 20px;
+  padding: 9px 8px;
+  border-radius: 16px;
   transition: background-color 150ms ease;
 }
 
@@ -631,7 +672,7 @@ $clock-size: 16px;
 }
 
 .notification-title {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 500;
 }
 
@@ -639,12 +680,12 @@ $clock-size: 16px;
 // labels, the way the power rows do: the pair reads as one block.
 .notification-body {
   margin-top: -2px;
-  font-size: 13px;
+  font-size: 12px;
   color: $text-dim;
 }
 
 .notification-time {
-  font-size: 13px;
+  font-size: 12px;
   color: $text-ghost;
 }
 
@@ -652,26 +693,26 @@ $clock-size: 16px;
 // the only thing on that part of the screen, so it reads as an object rather
 // than as a section of the column the panels form.
 .toast {
-  border-radius: 26px;
-  padding: 13px 12px 12px 14px;
+  border-radius: 18px;
+  padding: 11px 10px 10px 12px;
 }
 
-// The dismiss button is 9px taller than the line of type beside it, and a
-// vertical box spends that on both sides of the row — which is what put the
-// app's name in a band of its own instead of over the title it belongs to. The
-// row gives the height back, so the card is spaced by its type, not by a button.
+// The dismiss button is taller than the line of type beside it, and a vertical
+// box spends that on both sides of the row — which is what put the app's name in
+// a band of its own instead of over the title it belongs to. The row gives the
+// height back, so the card is spaced by its type, not by a button.
 .toast-head {
   margin-top: -4px;
   margin-bottom: -4px;
 }
 
 .toast-app {
-  font-size: 13px;
+  font-size: 12px;
   color: $accent-text;
 }
 
 .toast-title {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 500;
 }
 
@@ -679,24 +720,24 @@ $clock-size: 16px;
 // back off, so the title and what it says read as one block.
 .toast-body {
   margin-top: -2px;
-  font-size: 14px;
+  font-size: 13px;
   color: $text-dim;
 }
 
 .toast-actions {
-  margin-top: 5px;
+  margin-top: 4px;
 }
 
 // The one outlined control in the bar. It has to read as pressable without a
 // fill, so it carries its edge where everything else leans on a tint.
 .toast-action {
   @extend %bare-button;
-  min-height: 32px;
-  padding: 0 16px;
+  min-height: 28px;
+  padding: 0 14px;
   border: 1px solid $divider;
   border-radius: $pill;
   color: $text-dim;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   transition:
     background-color 150ms ease,
@@ -725,47 +766,34 @@ $clock-size: 16px;
 // four classes below rather than the power menu's own: the audio menu wears
 // them too.
 .submenu {
-  padding: 8px 10px 10px;
+  padding: 6px 8px 8px;
 }
 
-// The rule is a background, not a border, because a border cannot carry a
-// gradient. It lines up with the rows below it, not with the panel: both sit on
-// the panel's 10px of side padding. Stronger than `$pill-edge` on purpose — the
-// ends fade out, so a hairline at the panel's own alpha would read as nothing.
 .submenu-head {
-  padding: 6px 4px 11px;
-  margin-bottom: 8px;
-  background-image: linear-gradient(
-    to right,
-    transparent 0%,
-    $divider 18%,
-    $divider 82%,
-    transparent 100%
-  );
-  background-size: 100% 1px;
-  background-position: bottom;
-  background-repeat: no-repeat;
+  padding: 5px 4px 9px;
+  margin-bottom: 7px;
+  @include rule;
 }
 
 .submenu-title {
-  font-size: 17px;
+  font-size: 15px;
   font-weight: 500;
 }
 
 .submenu-subtitle {
-  font-size: 13px;
+  font-size: 12px;
   color: $accent-text;
 }
 
 .power-row {
   @extend %bare-button;
-  min-height: 54px;
-  // Less than the 12 a bare glyph needed: the icon disc brings its own edge
-  // distance, the way `.icon-pill` does on the bar.
-  padding: 0 10px;
+  min-height: 46px;
+  // Less than a bare glyph needed: the icon disc brings its own edge distance,
+  // the way `.icon-pill` does on the bar.
+  padding: 0 8px;
   // Not the pill radius: a row this wide reads as a shape, and the design keeps
   // it a rounded rectangle so only the panel around it is a capsule.
-  border-radius: 20px;
+  border-radius: 16px;
   color: $text;
   transition: background-color 150ms ease;
 }
@@ -778,15 +806,15 @@ $clock-size: 16px;
 // than as four outlines of different weights. It has to out-tint the row hover
 // it sits on, or it disappears under the pointer.
 .power-row-icon {
-  min-width: 34px;
-  min-height: 34px;
+  min-width: 30px;
+  min-height: 30px;
   border-radius: $pill;
   background-color: rgba(233, 233, 237, 0.12);
   color: rgba(233, 233, 237, 0.7);
 }
 
 .power-row-label {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 500;
 }
 
@@ -795,7 +823,7 @@ $clock-size: 16px;
 // gap Pango leaves between the two boxes — the pair reads as one block.
 .power-row-meta {
   margin-top: -3px;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 400;
   color: $text-faint;
 }

@@ -12,11 +12,11 @@ function Row(item: PowerItem, onRun: () => void) {
 
   return (
     <button class={primary ? "power-row primary" : "power-row"} onClicked={onRun}>
-      <box spacing={10}>
+      <box spacing={9}>
         <image
           class="power-row-icon"
           iconName={item.icon}
-          pixelSize={19}
+          pixelSize={17}
           valign={Gtk.Align.CENTER}
         />
         <box orientation={Gtk.Orientation.VERTICAL} valign={Gtk.Align.CENTER}>
@@ -35,14 +35,14 @@ export default function PowerMenu(props: {
 }) {
   return (
     <box class="panel submenu" orientation={Gtk.Orientation.VERTICAL} visible={props.visible}>
-      <box class="submenu-head" spacing={10}>
+      <box class="submenu-head" spacing={9}>
         <button
           class="icon-button"
           tooltipText={t.back}
           valign={Gtk.Align.CENTER}
           onClicked={props.onBack}
         >
-          <image iconName={Icons.back} pixelSize={18} />
+          <image iconName={Icons.back} pixelSize={16} />
         </button>
         <box orientation={Gtk.Orientation.VERTICAL} valign={Gtk.Align.CENTER}>
           <label class="submenu-title" label={t.power} xalign={0} />

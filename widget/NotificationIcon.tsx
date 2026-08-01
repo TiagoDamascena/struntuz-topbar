@@ -3,10 +3,10 @@ import { hasIcon, Icons } from "../lib/icons"
 import { squareTexture } from "../lib/image"
 import { notificationIconName, notificationImage, type Notification } from "../lib/notifications"
 
-// The design draws the disc at two sizes: 40px on a toast, which is a card of
-// its own, and 34px on a list row, where it sits beside two lines of type.
-const SIZE = { disc: 34, glyph: 17 }
-const LARGE = { disc: 40, glyph: 19 }
+// Two sizes, as in the design: the larger on a toast, which is a card of its
+// own, and the smaller on a list row, where it sits beside two lines of type.
+const SIZE = { disc: 30, glyph: 15 }
+const LARGE = { disc: 34, glyph: 17 }
 
 // The disc a notification wears. Three sources, in the order of how much they
 // say: the picture the sender sent, its own icon, then the bar's bell — every

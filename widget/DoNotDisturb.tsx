@@ -12,11 +12,11 @@ export default function DoNotDisturb() {
 
   return (
     <button class={on.as((quiet) => (quiet ? "tile on" : "tile"))} onClicked={toggleDontDisturb}>
-      <box spacing={11}>
+      <box spacing={9}>
         <image
           class="tile-icon"
           iconName={on.as((quiet) => (quiet ? Icons.notificationOff : Icons.notification))}
-          pixelSize={20}
+          pixelSize={18}
           valign={Gtk.Align.CENTER}
         />
         <box orientation={Gtk.Orientation.VERTICAL} valign={Gtk.Align.CENTER}>

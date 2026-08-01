@@ -11,11 +11,11 @@ export default function NightLight() {
 
   return (
     <button class={on.as((warm) => (warm ? "tile on" : "tile"))} onClicked={toggleNightLight}>
-      <box spacing={11}>
+      <box spacing={9}>
         <image
           class="tile-icon"
           iconName={Icons.nightLight}
-          pixelSize={20}
+          pixelSize={18}
           valign={Gtk.Align.CENTER}
         />
         <box orientation={Gtk.Orientation.VERTICAL} valign={Gtk.Align.CENTER}>

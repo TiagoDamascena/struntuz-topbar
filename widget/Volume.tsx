@@ -69,15 +69,20 @@ export default function Volume(props: {
         tooltipText={silent.as((quiet) => (quiet ? t.volumeUnmute : t.volumeMute))}
         halign={Gtk.Align.START}
         valign={Gtk.Align.CENTER}
-        marginStart={6}
+        // Concentric with the capsule's rounded end rather than merely inset
+        // from it: the cap's arc centre is one radius in, and a disc anywhere
+        // else leaves a ring thinner top-to-bottom than it is on the left
+        // (measured at 6 in a 40px capsule: 3px against 5.5px). How wide that
+        // ring comes out is the capsule's height, not this.
+        marginStart={5}
         onClicked={toggleMute}
       >
-        {/* 23 and not the 19 the other discs carry: `pixelSize` counts the box
+        {/* 20 and not the 18 the other discs carry: `pixelSize` counts the box
             and the speaker is a wide glyph, so its cone fills 17.1 of the 24 in
-            height where the bell fills all of it (measured). At 23 it draws
-            16.4px tall in a 36px disc, which is the proportion `.tile-icon`
-            has at 20 in 44. */}
-        <image iconName={volumeIcon("outline")} pixelSize={23} />
+            height where the bell fills all of it (measured). At 20 it draws
+            14.3px tall in a 32px disc, which is the proportion `.tile-icon`
+            has at 18 in 36. */}
+        <image iconName={volumeIcon("outline")} pixelSize={20} />
       </button>
 
       {/* Only under the pointer, as in the design. Both halves of that are the
@@ -90,10 +95,10 @@ export default function Volume(props: {
         tooltipText={t.audioOutput}
         halign={Gtk.Align.END}
         valign={Gtk.Align.CENTER}
-        marginEnd={14}
+        marginEnd={12}
         onClicked={() => props.onOpen?.()}
       >
-        <image iconName={Icons.forward} pixelSize={15} />
+        <image iconName={Icons.forward} pixelSize={13} />
       </button>
     </overlay>
   )

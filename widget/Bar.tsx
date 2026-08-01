@@ -3,10 +3,10 @@ import { Astal, Gtk, Gdk } from "ags/gtk4"
 import { createComputed, createState } from "ags"
 import Clock from "./Clock"
 import ControlCenter, { type View } from "./ControlCenter"
-import ControlCenterButton from "./ControlCenterButton"
-import Segments from "./Segments"
+import Controls from "./Controls"
 import Toasts from "./Toasts"
 import Workspaces from "./Workspaces"
+import { BAR_SIDE, BAR_TOP } from "../lib/layout"
 
 export default function Bar(gdkmonitor: Gdk.Monitor) {
   const { TOP, LEFT, RIGHT } = Astal.WindowAnchor
@@ -44,22 +44,25 @@ export default function Bar(gdkmonitor: Gdk.Monitor) {
       gdkmonitor={gdkmonitor}
       exclusivity={Astal.Exclusivity.EXCLUSIVE}
       anchor={TOP | LEFT | RIGHT}
-      marginTop={10}
-      marginLeft={14}
-      marginRight={14}
+      marginTop={BAR_TOP}
+      marginLeft={BAR_SIDE}
+      marginRight={BAR_SIDE}
       application={app}
     >
       <centerbox class="bar">
-        <box $type="start" spacing={8} valign={Gtk.Align.CENTER}>
+        <box $type="start" valign={Gtk.Align.CENTER}>
           <Workspaces />
         </box>
         <box $type="center" valign={Gtk.Align.CENTER}>
           <Clock />
         </box>
-        <box $type="end" spacing={8} valign={Gtk.Align.CENTER} halign={Gtk.Align.END}>
-          <Segments open={open} view={view} onOpen={show} onClose={hide} />
-          <ControlCenterButton
-            active={showingMain}
+        <box $type="end" valign={Gtk.Align.CENTER} halign={Gtk.Align.END}>
+          <Controls
+            open={open}
+            view={view}
+            main={showingMain}
+            onOpen={show}
+            onClose={hide}
             onToggle={() => (showingMain.get() ? hide() : show("main"))}
           />
         </box>

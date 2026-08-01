@@ -8,16 +8,16 @@ import NotificationIcon from "./NotificationIcon"
 
 // The list scrolls rather than growing: the panel hangs from the top of the
 // screen, and a day of notifications would otherwise run off the bottom of it.
-const MAX_HEIGHT = 420
+const MAX_HEIGHT = 340
 
 // Long enough for a title to read as a title, short enough that its natural
 // width never widens the panel — a GTK label asks for the whole string
 // otherwise, and the column would follow it.
-const TITLE_CHARS = 30
+const TITLE_CHARS = 28
 
 function Row(n: Notification, close: () => void) {
   return (
-    <box class="notification-row" spacing={12}>
+    <box class="notification-row" spacing={10}>
       {/* On the whole row, buttons and all: a GTK4 button claims the sequence,
           which stops it before it bubbles up to here, so the ✕ still only
           dismisses. */}
@@ -51,7 +51,7 @@ function Row(n: Notification, close: () => void) {
         valign={Gtk.Align.CENTER}
         onClicked={() => n.dismiss()}
       >
-        <image iconName={Icons.close} pixelSize={13} />
+        <image iconName={Icons.close} pixelSize={12} />
       </button>
     </box>
   )
@@ -63,8 +63,8 @@ export default function Notifications(props: { visible: Accessor<boolean>; close
 
   return (
     <box class="panel notifications" orientation={Gtk.Orientation.VERTICAL} visible={props.visible}>
-      <box class="notifications-head" spacing={9}>
-        <image class="notifications-head-icon" iconName={Icons.notification} pixelSize={16} />
+      <box class="notifications-head" spacing={8}>
+        <image class="notifications-head-icon" iconName={Icons.notification} pixelSize={14} />
         <label class="notifications-head-label" label={t.notifications} />
         <label
           class="notifications-count"
@@ -102,13 +102,13 @@ export default function Notifications(props: { visible: Accessor<boolean>; close
 
       <box
         class="notifications-empty"
-        spacing={10}
+        spacing={9}
         halign={Gtk.Align.CENTER}
         valign={Gtk.Align.CENTER}
         visible={any.as((some) => !some)}
         vexpand
       >
-        <image iconName={Icons.notification} pixelSize={19} />
+        <image iconName={Icons.notification} pixelSize={17} />
         <label label={t.notificationsEmpty} />
       </box>
     </box>

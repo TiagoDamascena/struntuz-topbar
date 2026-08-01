@@ -11,14 +11,12 @@ import Notifications from "./Notifications"
 import PowerMenu from "./PowerMenu"
 import Volume from "./Volume"
 import { readNightLight } from "../lib/nightlight"
+import { PANEL_SIDE, PANEL_TOP } from "../lib/layout"
 
-// The design's own geometry: the panel hangs 66px below the top of the screen,
-// 14px in from the right, in a 452px column. Measured from the top of the
-// output, not from under the bar — the window ignores exclusive zones.
-const PANEL_TOP = 66
-const PANEL_SIDE = 14
-const PANEL_WIDTH = 452
-const AVATAR = 42
+// Where it hangs is the bar's, not this window's: measured from the top of the
+// output, since the window ignores exclusive zones (see `lib/layout.ts`).
+const PANEL_WIDTH = 400
+const AVATAR = 36
 
 // The picture, or the initial when there is none. `overflow` is what rounds the
 // picture off: in GTK4 a border-radius clips the background but not the content,
@@ -41,7 +39,7 @@ function Avatar() {
 
 function UserPill(props: { visible: Accessor<boolean>; onPower: () => void }) {
   return (
-    <box class="panel user" spacing={12} visible={props.visible}>
+    <box class="panel user" spacing={10} visible={props.visible}>
       <Avatar />
       <box orientation={Gtk.Orientation.VERTICAL} valign={Gtk.Align.CENTER} hexpand>
         <label class="user-name" label={userName()} xalign={0} />
@@ -53,7 +51,7 @@ function UserPill(props: { visible: Accessor<boolean>; onPower: () => void }) {
         valign={Gtk.Align.CENTER}
         onClicked={props.onPower}
       >
-        <image iconName={Icons.power} pixelSize={20} />
+        <image iconName={Icons.power} pixelSize={18} />
       </button>
     </box>
   )
@@ -117,7 +115,7 @@ export default function ControlCenter(props: {
         <box
           $type="overlay"
           orientation={Gtk.Orientation.VERTICAL}
-          spacing={10}
+          spacing={8}
           widthRequest={PANEL_WIDTH}
           halign={Gtk.Align.END}
           valign={Gtk.Align.START}
@@ -128,7 +126,7 @@ export default function ControlCenter(props: {
           {/* The design's tile grid, between the user pill and the
               notifications: two columns of equal width, which is what
               `homogeneous` gives whatever the labels measure. */}
-          <box spacing={10} homogeneous visible={main}>
+          <box spacing={8} homogeneous visible={main}>
             <DoNotDisturb />
             <NightLight />
           </box>
