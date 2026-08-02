@@ -20,6 +20,8 @@ export const BAR_SIDE = 10
 // Tighter than the gap the compositor leaves between windows: a panel is not
 // another window beside the bar, it is what the bar opened, and the distance is
 // what says so.
-export const PANEL_TOP = BAR_TOP + BAR_HEIGHT + 8
+export const PANEL_GAP = 8
+
+export const PANEL_TOP = BAR_TOP + BAR_HEIGHT + PANEL_GAP
 
 export const PANEL_SIDE = BAR_SIDE

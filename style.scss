@@ -294,23 +294,41 @@ $clock-size: 14px;
   opacity: 1;
 }
 
+// GTK gives a popover its own `background` style class, and the theme paints an
+// opaque `--window-bg-color` on it — the same rule `window.background` at the top
+// of this file is reset for. Left alone it sits under the fill below, which is
+// why the menu came out solid whatever alpha it was given (measured: a fully
+// transparent `contents` still drew #202020).
+.tray-menu {
+  background-color: transparent;
+}
+
 // The menu behind a tray glyph is the application's own — what it says and how
 // deep it goes is not the bar's business — but it arrives as a `Gtk.PopoverMenu`
 // in the theme's grey, hanging off a Nocturne pill. Only the surface and the row
 // are restyled.
 .tray-menu contents {
+  // The theme reserves a margin around the menu for a shadow to fall into, and
+  // that margin is part of the Wayland surface — so `blur_popups` blurs it too,
+  // and `ignore_alpha` cannot spare it: a soft shadow is not transparent enough
+  // to fall under a threshold the bar needs at 0 (README.md). What that leaves is
+  // an 8px haze above the menu, which is the menu appearing to start above where
+  // it does. Nothing else in this bar carries a shadow either.
+  margin: 0;
+  box-shadow: none;
   padding: 6px;
   border: 1px solid $pill-edge;
   // Not the panels' 22: the rows inside are 28 tall, and a radius that wide
   // would bow past the first and the last of them.
   border-radius: 14px;
-  // Solid, where every other surface in the bar is a tint. A popover is its own
-  // Wayland surface and the compositor's blur rule is written against the bar's
-  // namespace (README.md), so there is nothing behind this one to reveal — an
-  // alpha would only ghost whatever window it landed on into the type. It was
-  // 0.94 first and the window behind it came through at 5/255, visible on a
-  // screenshot. The design's own menus are opaque for the same reason.
-  background-color: #161826;
+  // The panels' own fill, which is what this is: a surface hanging under the bar
+  // over a window of unknown brightness. It leans on the compositor exactly as
+  // they do, but on a rule of its own — a popover is its own Wayland surface, so
+  // `blur` on the bar's namespace does not reach it and `blur_popups` on that
+  // same rule is what does (README.md). Without that line the menu is not a tint
+  // but a window: measured over a terminal, its text read through the fill at
+  // 157/255.
+  background-color: $panel-bg;
   color: $text;
 }
 

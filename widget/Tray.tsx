@@ -11,6 +11,7 @@ import {
   trayItems,
   type Item,
 } from "../lib/tray"
+import { PANEL_GAP } from "../lib/layout"
 
 // `pixelSize` counts the box and not the glyph, and this is the one place in the
 // bar where the box is not the bar's own: the set in `icons/` fills 22–24 units
@@ -33,6 +34,11 @@ function install(anchor: Gtk.Widget, item: Item): void {
   // for an arrow to come out of, and the pill is the shape the menu hangs from.
   menu.set_position(Gtk.PositionType.BOTTOM)
   menu.set_has_arrow(false)
+  // The same gap the control centre leaves under the bar, so the two land on one
+  // line however they were opened. GTK hangs a popover off its anchor's own
+  // bottom edge, which is why the box below fills the pill's height rather than
+  // the glyph's: the distance is then the bar's and not the icon size's.
+  menu.set_offset(0, PANEL_GAP)
   menu.add_css_class("tray-menu")
 
   // The actions carry a `dbusmenu` prefix and have to be inserted on a parent of
@@ -92,10 +98,12 @@ function TrayIcon(item: Item) {
     <box
       class={needsAttention(item).as((loud) => (loud ? "tray-item attention" : "tray-item"))}
       tooltipText={itemTooltip(item)}
-      valign={Gtk.Align.CENTER}
+      // The pill's whole height, not the glyph's: it is what the menu hangs off
+      // (see `install`), and a taller press target for a 16px icon besides.
+      valign={Gtk.Align.FILL}
       $={(self) => install(self, item)}
     >
-      <image gicon={itemIcon(item)} pixelSize={ICON_SIZE} />
+      <image gicon={itemIcon(item)} pixelSize={ICON_SIZE} valign={Gtk.Align.CENTER} />
     </box>
   )
 }

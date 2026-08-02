@@ -446,10 +446,31 @@ the sources behind the waybar setup this replaces, plus the notification daemon.
   actions carry a `dbusmenu` prefix and have to be inserted on a parent of the
   menu, which the popover is of its own contents. And it does work on a layer
   surface with no keyboard focus (verified end to end against nm-applet's real
-  dbusmenu: sections, separators, a check item, a submenu), but the compositor's
-  blur `layerrule` matches namespaces and a popover is its own surface, so nothing
-  reaches it and `.tray-menu` is painted solid — at 0.94 the window behind it came
-  through at 5/255 and was visible on a screenshot.
+  dbusmenu: sections, separators, a check item, a submenu).
+  Three more things about that popover, all measured. GTK gives it the
+  `background` style class and the theme paints an opaque `--window-bg-color`
+  under everything — the same thing `window.background` is reset for at the top of
+  `style.scss`, and until `.tray-menu` did the same the menu drew #202020 whatever
+  alpha its `contents` was given. It sits at `PANEL_GAP` below the bar through
+  `set_offset`, which puts its top edge on the control centre's own line (both
+  measured at y=58); the anchor for that is the item's box, which is why the box
+  fills the pill's height rather than the glyph's. And the theme's shadow margin
+  is part of the Wayland surface, so it takes the blur with it and reads as an 8px
+  haze above the menu — `margin: 0; box-shadow: none` on `contents` is what
+  removes it, and nothing else in this bar has a shadow anyway.
+  The blur itself is not `blur` on the namespace: a popover is its own surface,
+  and Hyprland renders a layer's popups with `blur_popups` from the same layerrule
+  (`src/render/Renderer.cpp`, `renderdata.blur = …blurPopups()`).
+  `decoration:blur:popups` is the *window* equivalent and does nothing here. With
+  that rule the menu takes `$panel-bg` and is glass like the panels — verified by
+  measurement: of the 206 backdrop pixels above 90/255 under an open menu, none
+  came through, where unblurred they would read ~82 against the 33–36 they do.
+  Without it the fill is not a tint but a window, at 157/255 over a terminal.
+  A layer rule cannot be tried with `hyprctl keyword layerrule …`, which is worth
+  knowing before debugging one: `handleLayerrule` only appends to `m_keywordRules`
+  and, unlike `handleWindowrule` beside it, never calls `registerRule`, so the
+  keyword answers `ok` and changes nothing until a reload — which clears the
+  keyword rules first. Only the config file works.
   For testing without a tray application: astal's watcher keys items by bus name
   (`RegisterStatusNotifierItem` takes either a bus name or a path, never
   `busname/path`), so a stub publishes one item per process.

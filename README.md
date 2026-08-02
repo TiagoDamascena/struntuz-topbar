@@ -319,13 +319,29 @@ Keep `ignore_alpha` at `0`: anything higher starts skipping the panels
 themselves. With home-manager, the same rules go in
 `wayland.windowManager.hyprland.settings.layerrule` as a list of attribute sets.
 
-To try one before writing it into your config,
-`hyprctl keyword layerrule blur,struntuz-topbar` applies until the next reload.
+Layer rules take effect on `hyprctl reload`. They cannot be tried with
+`hyprctl keyword layerrule …`: on 0.56 that parses and answers `ok` while
+registering nothing, since the dynamic path window rules have was never added for
+layer rules.
 
-A tray item's menu is not one of those windows: a popover is its own Wayland
-surface, hanging off the bar's rather than drawn in it, so none of the rules above
-reach it. It is painted solid for that reason and needs nothing from the
-compositor.
+A tray item's menu is not one of those windows. A popover is its own Wayland
+surface, hanging off the bar's rather than drawn in it, so `blur` above does not
+reach it — `blur_popups` on the same rule is what does:
+
+```
+layerrule {
+  name=struntuz-topbar-blur
+  blur=on
+  blur_popups=on
+  ignore_alpha=0
+  match:namespace=struntuz-topbar
+}
+```
+
+The menu is a tint like the panels are, so it wants that line the way they want
+theirs — without it you get the window behind it rather than a blur of it. Note
+that `decoration:blur:popups` is a different setting and will not do: that one
+governs the popups of ordinary windows, not of a layer surface.
 
 ## Clicking a notification
 
