@@ -19,8 +19,9 @@ NixOS the whole thing is one `enable = true`.
   each of which is drawn only when the player says it answers it. Clicking the
   cover asks the player to come to the front. Anything speaking
   [MPRIS](https://specifications.freedesktop.org/mpris-spec/latest/) is a
-  player, so when more than one is running the panel lists them and you pick;
-  otherwise it follows whatever is playing.
+  player, so when more than one is running the panel grows a row of tabs across
+  the top — one per source, a dot on whichever is making sound — and you pick.
+  With one player there are no tabs and it just follows what is playing.
 - **Notifications** — the bar is the session's notification daemon. Cards appear
   in the corner and stay in the control centre's list until cleared. Clicking a
   card or a row hands the click back to the application that sent it, which is
@@ -376,20 +377,27 @@ out rather than faked:
   library as MPRIS.
 - **The queue, or "up next".** The spec does have optional `TrackList` and
   `Playlists` interfaces, but `AstalMpris` does not bind them, so a client
-  built on it cannot read a queue. The space goes to the list of *players*
+  built on it cannot read a queue. The space goes to the choice of *player*
   instead, which is the thing that actually gets in the way.
 
-**`playerctld` is ignored.** It registers an MPRIS name of its own and mirrors
-whichever real player was last active, so counting it lists every track twice
-and can leave the bar controlling the proxy rather than the application. It
-exists to give a single-player client the "whatever is playing" this bar works
-out for itself, so it is dropped. Running it alongside the bar is harmless.
+**`playerctld` is left out of the tabs.** It registers an MPRIS name of its own
+and mirrors whichever real player was last active, so counting it shows every
+track twice and can leave the bar controlling the proxy rather than the
+application. It exists to give a single-player client the "whatever is playing"
+this bar works out for itself. **Keep running it** if your keybinds use
+`playerctl` — nothing here stops it, the bar simply talks to the applications
+directly rather than through it.
 
-**Cover art needs a TLS backend.** Astal fetches `mpris:artUrl` into its own
-cache, and for Spotify — and every other streaming player — that is an https
-URL. The package carries `glib-networking` for it. If you build the bar
-yourself, without it the art silently never appears and the log says
-`TLS support is not available`.
+**Cover art needs a TLS backend, and a track to have one at all.** Astal fetches
+`mpris:artUrl` into its own cache, and for Spotify — and every other streaming
+player — that is an https URL. The package carries `glib-networking` for it; if
+you build the bar yourself, without it the art silently never appears and the
+log says `TLS support is not available`.
+
+Plenty of tracks publish no art, and then the tile shows a note instead. That
+is usually the page rather than the player: Firefox only forwards what the site
+declared through the MediaSession API, and YouTube's watch pages declare none,
+where SoundCloud and Bandcamp do.
 
 Clicking the cover asks the player to raise its window, which comes with the
 same catch as clicking a notification below: MPRIS's `Raise` is a request, and

@@ -45,8 +45,6 @@ export interface Strings {
   mediaRepeatOff: string
   mediaRepeatTrack: string
   mediaRepeatAll: string
-  // The section over the list of everything else that is playing.
-  mediaPlayers: string
 
   notifications: string
   notificationsClear: string
@@ -115,7 +113,6 @@ const EN: Strings = {
   mediaRepeatOff: "Off",
   mediaRepeatTrack: "This track",
   mediaRepeatAll: "Playlist",
-  mediaPlayers: "Playing from",
 
   notifications: "Notifications",
   notificationsClear: "Clear all",
@@ -181,7 +178,6 @@ const PT_BR: Partial<Strings> = {
   mediaRepeatOff: "Desligado",
   mediaRepeatTrack: "Esta faixa",
   mediaRepeatAll: "Playlist",
-  mediaPlayers: "Tocando em",
 
   notifications: "Notificações",
   notificationsClear: "Limpar tudo",

@@ -155,7 +155,15 @@ greeter.
   Two of the design's own controls are not in the protocol and are left out
   rather than faked: there is no like/save (`xesam:userRating` is metadata about
   a track, not a switch), and no queue (`TrackList`/`Playlists` are optional
-  interfaces astal does not bind). The panel's list is of *players* instead.
+  interfaces astal does not bind). What takes the queue's place is the choice of
+  *player*, and its shape was the second try. The first was a list under a
+  section head at the foot of the panel, which borrowed the audio menu's rows so
+  exactly that it read as a list of output devices — the user's words, and
+  right. It is a row of tabs over the panel now: a tab row says how many sources
+  there are before it is touched, where a list says it only once read, and it
+  sits on top of what it switches rather than under it. The dot on a tab is a
+  second question the lit tab cannot answer — which player is making sound, as
+  against which one the panel is driving.
   `widget/Media.tsx` is the pill and `widget/MediaPanel.tsx` the panel — a
   window of its own mirroring the control centre's, since the design hangs it
   off the left end of the bar. The two are never up at once: each covers the
@@ -196,11 +204,6 @@ taking it down again: 36 is small enough that a round button in the pill has no
 room left around its glyph, and no amount of padding gives it back (see the
 concentricity note below). 40 is where the ends of the pill and the gap between
 two glyphs measure the same, at 12–14px.
-
-A list inside a panel is `.panel-section*` and `.list-row*` in `style.scss`,
-shared by the audio menu's devices and the media panel's players. They were
-`.audio-*` while there was one such list; the second one is what made them
-shared rather than copied, on the same reasoning as the panel rules below.
 
 The panel rules are one `@mixin rule` in `style.scss` and not a gradient per
 head. They were written out three times and the audio menu's had drifted into a
@@ -328,13 +331,17 @@ the sources behind the waybar setup this replaces, plus the notification daemon.
   The media set is the shortest in the file and so takes the largest
   `pixelSize`s: play and play.fill 17.6×19.8, pause 9.8×19.4, pause.fill
   14.4×19.4, track-previous and track-next 18.0×18.0, shuffle 24.0×19.0, repeat
-  24.0×20.2. Shuffle and repeat exported at 27×24 and 25×24 and were scaled into
-  the shared canvas with a `<g transform>` rather than left wide — the ink
-  centre is on 12,12 in both, measured after the transform. A `<g>` costs
-  nothing in recolouring: GTK forces `fill` on the `path`s inside it either way.
-  What that leaves is a row of controls at 16–22 (`widget/MediaPanel.tsx`) and a
-  bar glyph at 15, which is 13–18px and 12px of ink — the design's own
-  proportion to the button each sits in. The volume ramp: speaker 12.0×17.1,
+  24.0×20.0, repeat-one 24.0×20.4. The exception is the music note at
+  14.4×23.6 — the one glyph in the set that fills its box in height, which is
+  why the empty cover tile draws it at 30 where the transport runs 16–22 and the
+  bar 15. That leaves 13–18px of ink in the panel and 12px on the bar, the
+  design's own proportion to the button each sits in.
+  Shuffle exported at 27×24 and is scaled into the shared canvas with a
+  `<g transform>` rather than left wide, its ink centred on 12,12 (measured
+  after). A `<g>` costs nothing in recolouring: GTK forces `fill` on the `path`s
+  inside it either way. Repeat came the same way at 25×24 and was re-exported to
+  fit instead, which is the better fix when it is available — the transform is
+  for a glyph that only exists wide. The volume ramp: speaker 12.0×17.1,
   low 16.6×17.1, medium 20.3×17.1, high 24.0×22.3, slash 18.4×18.6 — the cone is
   17.1 in the first three because it is the *same* cone at the same place on the
   shared canvas, so the ramp gains waves without the speaker moving or resizing.
@@ -410,6 +417,15 @@ the sources behind the waybar setup this replaces, plus the notification daemon.
   buttons stop the press before it bubbles up (verified on the toast and on the
   list row — the ✕ closes with `DISMISSED_BY_USER` and emits no `ActionInvoked`
   beside it). No need to fence a click target off from the buttons inside it.
+- **A box gives its children `FILL`, so a round button in a row of unequal
+  heights comes out an oval.** `border-radius: 999px` on a box that is not
+  square is a capsule, and what decides squareness is the allocation and not
+  `min-width`/`min-height`, which are only a floor: the media panel's 38px
+  shuffle button sat in a row whose tallest child is the 50px play disc, so it
+  was allocated 38×50 and its hover was an upright oval. Every round button
+  elsewhere in the bar carries `valign={Gtk.Align.CENTER}` for this reason —
+  it is load-bearing, not tidiness, and it only shows up once two sizes share a
+  row.
 - **`can-target: false` takes a widget's children with it.** `gtk_widget_pick`
   returns nothing for a widget that cannot be targeted and never looks inside
   it, so an overlay of type with a button in it is either all clickable or none

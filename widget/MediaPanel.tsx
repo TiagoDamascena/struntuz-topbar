@@ -14,6 +14,8 @@ import {
   cycleLoop,
   hasProgress,
   isActivePlayer,
+  isPlayerPlaying,
+  loopIcon,
   loopLabel,
   loopOn,
   loopSupported,
@@ -71,11 +73,25 @@ function Cover() {
   const cover = createComputed(() => (path() ? squareTexture(path(), ART) : null))
 
   return (
-    // The tint under it is what a track with no art wears, so the head keeps
-    // its shape whether or not the player published a cover. `overflow` is what
-    // rounds the picture off: in GTK4 a border-radius clips the background and
-    // not the content until the widget is told to hide what falls outside it.
+    // The tint and the note under it are what a track with no art wears, so
+    // the head keeps its shape whether or not the player published a cover —
+    // and plenty do not: Firefox publishes only what the page declared through
+    // the MediaSession API, which YouTube's own watch pages do not.
+    // `overflow` is what rounds the picture off: in GTK4 a border-radius clips
+    // the background and not the content until the widget is told to hide what
+    // falls outside it.
     <box class="media-art" overflow={Gtk.Overflow.HIDDEN} valign={Gtk.Align.START}>
+      {/* 30 and not the transport's numbers: the note is the one tall glyph in
+          the set, filling 23.6 units of the 24 `pixelSize` counts, so it draws
+          29.5px in the 84px tile — the share `.tile-icon` has at 18 in 36. */}
+      <image
+        class="media-art-glyph"
+        iconName={Icons.music}
+        pixelSize={30}
+        hexpand
+        vexpand
+        visible={cover.as((texture) => texture === null)}
+      />
       <image
         pixelSize={ART}
         visible={cover.as((texture) => texture !== null)}
@@ -179,6 +195,11 @@ function Seek() {
 // of height, play fills 19.8 and repeat 20.2, where the rest of the set fills
 // 22–24. Stepped off the ink, they land 13–18px of it — the design's own
 // proportion to the button each one sits in.
+// `valign` on every one of them, and not by habit: a box gives its children
+// FILL, so without it each button is stretched to the height of the tallest —
+// the 50px play disc — and a 38px circle allocated 38x50 comes out an oval
+// under the pointer, which is what a `border-radius` that large does to a box
+// that is not square.
 function Transport() {
   return (
     <box class="media-transport" spacing={8} halign={Gtk.Align.CENTER}>
@@ -186,6 +207,7 @@ function Transport() {
         class={shuffleOn().as((on) => (on ? "media-button on" : "media-button"))}
         visible={shuffleSupported()}
         tooltipText={t.mediaShuffle}
+        valign={Gtk.Align.CENTER}
         onClicked={toggleShuffle}
       >
         <image iconName={Icons.shuffle} pixelSize={17} />
@@ -195,12 +217,18 @@ function Transport() {
         class="media-button step"
         sensitive={canGoPrevious()}
         tooltipText={t.mediaPrevious}
+        valign={Gtk.Align.CENTER}
         onClicked={previousTrack}
       >
         <image iconName={Icons.trackPrevious} pixelSize={22} />
       </button>
 
-      <button class="media-play" tooltipText={playLabel()} onClicked={playPause}>
+      <button
+        class="media-play"
+        tooltipText={playLabel()}
+        valign={Gtk.Align.CENTER}
+        onClicked={playPause}
+      >
         <image iconName={playIcon("outline")} pixelSize={22} />
       </button>
 
@@ -208,6 +236,7 @@ function Transport() {
         class="media-button step"
         sensitive={canGoNext()}
         tooltipText={t.mediaNext}
+        valign={Gtk.Align.CENTER}
         onClicked={nextTrack}
       >
         <image iconName={Icons.trackNext} pixelSize={22} />
@@ -216,81 +245,90 @@ function Transport() {
       <button
         class={loopOn().as((on) => (on ? "media-button on" : "media-button"))}
         visible={loopSupported()}
-        // The label carries which of the three it is on, since the set has one
-        // repeat symbol and a looped track lights the same shape as a looped
-        // playlist.
+        // The glyph separates one track from the whole list; the label is what
+        // separates the list from nothing at all.
         tooltipText={loopLabel().as((mode) => `${t.mediaRepeat} · ${mode}`)}
+        valign={Gtk.Align.CENTER}
         onClicked={cycleLoop}
       >
-        <image iconName={Icons.repeat} pixelSize={16} />
+        <image iconName={loopIcon()} pixelSize={16} />
       </button>
     </box>
   )
 }
 
-// Everything else that is playing. The design's slot here is a queue, which
-// mpris keeps in an optional interface astal does not carry — and what actually
-// gets in the way of a media pill is not the next track but the third player
-// that turned up, so the space goes to those.
-function PlayerRow(player: Player) {
+// Everything else that is playing, as a row of tabs over the panel. The
+// design's slot down at the bottom is a queue, which mpris keeps in an optional
+// interface astal does not carry — and the first thing tried in its place, a
+// list of players under a section head, read as the audio menu's list of output
+// devices, since that is exactly the shape it borrowed. Tabs are the other
+// answer and a better one: the row says how many sources there are before it is
+// touched, where a list says it only after being read, and it puts the switch
+// at the top of what it switches rather than under it.
+const TAB_CHARS = 14
+
+function PlayerTab(player: Player) {
   const current = isActivePlayer(player)
   const track = playerTrack(player)
 
   return (
     <button
-      class={current.as((on) => (on ? "list-row current" : "list-row"))}
+      class={current.as((on) => (on ? "player-tab current" : "player-tab"))}
+      // What the tab has no room to say. Which player it is, is the tab; what
+      // it is playing is why you would switch to it.
+      tooltipText={track.as((text) => text || playerName(player))}
+      valign={Gtk.Align.CENTER}
       onClicked={() => selectPlayer(player)}
     >
-      <box spacing={9}>
-        <box orientation={Gtk.Orientation.VERTICAL} hexpand valign={Gtk.Align.CENTER}>
-          <label
-            class="list-row-name"
-            label={playerName(player)}
-            xalign={0}
-            maxWidthChars={LINE_CHARS}
-            ellipsize={Pango.EllipsizeMode.END}
-          />
-          <label
-            class="list-row-meta"
-            label={track}
-            xalign={0}
-            maxWidthChars={LINE_CHARS}
-            ellipsize={Pango.EllipsizeMode.END}
-            visible={track.as((text) => text.length > 0)}
-          />
-        </box>
-        <image
-          class="list-row-check"
-          iconName={Icons.check}
-          pixelSize={15}
+      <box spacing={7}>
+        {/* Only on the one making sound. With two players open that is the
+            question, and the lit tab answers a different one — which is being
+            controlled. */}
+        <box
+          class="player-tab-dot"
+          visible={isPlayerPlaying(player)}
           valign={Gtk.Align.CENTER}
-          visible={current}
+        />
+        <label
+          class="player-tab-name"
+          label={playerName(player)}
+          maxWidthChars={TAB_CHARS}
+          ellipsize={Pango.EllipsizeMode.END}
         />
       </box>
     </button>
   )
 }
 
-function PlayerList() {
+function PlayerTabs() {
   const all = players()
-  // One player is not a choice, and a list of one reads as a setting that does
+  // One player is not a choice, and a single tab reads as a control that does
   // nothing.
   const many = all.as((list) => list.length > 1)
 
   return (
-    <box orientation={Gtk.Orientation.VERTICAL} visible={many}>
-      <box class="panel-section" spacing={9}>
-        <label class="panel-section-label" label={t.mediaPlayers} />
-        <box class="panel-section-rule" hexpand valign={Gtk.Align.CENTER} />
-      </box>
-      <box orientation={Gtk.Orientation.VERTICAL} spacing={2}>
-        {/* Keyed by bus name, so a row survives everything but the application
-            behind it quitting. */}
-        <For each={all} id={(player) => player.busName}>
-          {(player) => PlayerRow(player)}
-        </For>
-      </box>
-    </box>
+    // Scrolled, so a fifth player pushes the row sideways rather than the
+    // panel wider: a `widthRequest` is a minimum, and a box asking for more
+    // than the column has would simply get it. The bin takes its content
+    // through `child` — a JSX child parents without telling it (CLAUDE.md).
+    <Gtk.ScrolledWindow
+      class="player-tabs"
+      visible={many}
+      hscrollbarPolicy={Gtk.PolicyType.EXTERNAL}
+      vscrollbarPolicy={Gtk.PolicyType.NEVER}
+      propagateNaturalHeight
+      child={
+        (
+          <box spacing={6}>
+            {/* Keyed by bus name, so a tab survives everything but the
+                application behind it quitting. */}
+            <For each={all} id={(player) => player.busName}>
+              {(player) => PlayerTab(player)}
+            </For>
+          </box>
+        ) as Gtk.Widget
+      }
+    />
   )
 }
 
@@ -367,10 +405,10 @@ export default function MediaPanel(props: {
             valign={Gtk.Align.START}
             widthRequest={PANEL_WIDTH}
           >
+            <PlayerTabs />
             <Head close={props.close} />
             <Seek />
             <Transport />
-            <PlayerList />
           </box>
         </revealer>
       </overlay>

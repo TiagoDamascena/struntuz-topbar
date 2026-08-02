@@ -35,7 +35,7 @@ function Row(speaker: Speaker) {
 
   return (
     <button
-      class={current.as((on) => (on ? "list-row current" : "list-row"))}
+      class={current.as((on) => (on ? "audio-row current" : "audio-row"))}
       onClicked={() => selectSpeaker(speaker)}
     >
       <box spacing={11}>
@@ -43,9 +43,9 @@ function Row(speaker: Speaker) {
             mute disc is 20: the cone is 17.1 units tall of the 24 its box
             counts, and it is the cone that has to line up down the column —
             what `high` adds reaches past it on both axes. */}
-        <image class="list-row-icon" iconName={ICON} pixelSize={18} valign={Gtk.Align.CENTER} />
+        <image class="audio-row-icon" iconName={ICON} pixelSize={18} valign={Gtk.Align.CENTER} />
         <label
-          class="list-row-name"
+          class="audio-row-name"
           label={speakerName(speaker)}
           xalign={0}
           hexpand
@@ -54,7 +54,7 @@ function Row(speaker: Speaker) {
           valign={Gtk.Align.CENTER}
         />
         <image
-          class="list-row-check"
+          class="audio-row-check"
           iconName={Icons.check}
           pixelSize={15}
           valign={Gtk.Align.CENTER}
@@ -98,11 +98,11 @@ export default function AudioMenu(props: { onBack: () => void }) {
 
       <Volume inset />
 
-      <box class="panel-section" spacing={9}>
-        <label class="panel-section-label" label={t.audioOutput} />
+      <box class="audio-section" spacing={9}>
+        <label class="audio-section-label" label={t.audioOutput} />
         {/* The same rule the panel heads carry — one `@include rule` in the
             stylesheet, so there is no second line to drift from the first. */}
-        <box class="panel-section-rule" hexpand valign={Gtk.Align.CENTER} />
+        <box class="audio-section-rule" hexpand valign={Gtk.Align.CENTER} />
       </box>
 
       <box orientation={Gtk.Orientation.VERTICAL} spacing={2}>

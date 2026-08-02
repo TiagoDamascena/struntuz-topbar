@@ -694,34 +694,31 @@ $clock-size: 14px;
   color: $text;
 }
 
-// The head over a list inside a panel — the audio menu's devices, the media
-// panel's players. The section label is the design's way of saying the list is
-// one kind of thing, and the rule after it runs out rather than reaching the
-// edge.
-// No padding on the right, so the rule ends where the panel head's does: that
-// one spans the panel's own padding and this row sat 10px inside it, which is
-// what made one line look like a different line from the other. The left inset
-// is the rows' instead, so the label starts over their contents.
-.panel-section {
+// What the volume menu lists under the bar. The section label is the design's
+// way of saying the list is one kind of thing, and the rule after it runs out
+// rather than reaching the edge.
+// No padding on the right, so the rule ends where the head's does: the head
+// spans the panel's own padding and this row sat 10px inside it, which is what
+// made one line look like a different line from the other. The left inset is
+// the rows' instead, so the label starts over their icons.
+.audio-section {
   padding: 6px 0 8px 10px;
 }
 
-.panel-section-label {
+.audio-section-label {
   font-size: 13px;
   color: $text-dim;
 }
 
-.panel-section-rule {
+.audio-section-rule {
   min-height: 1px;
   @include rule;
 }
 
-// A row in one of those lists: a device to play through, a player to control.
-// Same rounded rectangle as a power row, and the one in use is tinted rather
-// than only ticked — the check says which, the tint says it from across the
-// panel. Shared rather than written per list, which is how the panel rules
-// drifted apart before they were one mixin.
-.list-row {
+// A device. Same rounded rectangle as a power row, and the one that is playing
+// is tinted rather than only ticked — the check says which, the tint says it
+// from across the panel.
+.audio-row {
   @extend %bare-button;
   min-height: 46px;
   padding: 0 10px;
@@ -730,44 +727,34 @@ $clock-size: 14px;
   transition: background-color 150ms ease;
 }
 
-.list-row:hover {
+.audio-row:hover {
   background-color: $row-hover;
 }
 
-.list-row.current {
+.audio-row.current {
   background-color: rgba(145, 132, 217, 0.16);
 }
 
-.list-row.current:hover {
+.audio-row.current:hover {
   background-color: rgba(145, 132, 217, 0.26);
 }
 
 // A bare glyph, not a disc: the row already carries a tint of its own, and a
 // second shape under the icon would read as a button inside it.
-.list-row-icon {
+.audio-row-icon {
   color: $text-dim;
 }
 
-.list-row.current .list-row-icon {
+.audio-row.current .audio-row-icon {
   color: $accent-text;
 }
 
-.list-row-name {
+.audio-row-name {
   font-size: 14px;
   font-weight: 500;
 }
 
-// The second line, where a row has one. Same negative margin as the power
-// rows: the gap Pango leaves between the two labels comes back off so the pair
-// reads as one block, and the weight is said because a button's own is bold.
-.list-row-meta {
-  margin-top: -3px;
-  font-size: 12px;
-  font-weight: 400;
-  color: $text-faint;
-}
-
-.list-row-check {
+.audio-row-check {
   color: $accent-text;
 }
 
@@ -776,6 +763,63 @@ $clock-size: 14px;
 // and a row of buttons rather than a list.
 .media-panel {
   padding: 10px 10px 8px;
+}
+
+// The row of players over the panel, when there is more than one. Tabs and not
+// a list under a section head: the first version of this was the latter, and it
+// borrowed the audio menu's shape so exactly that it read as a list of output
+// devices rather than of sources to control. A tab row says how many there are
+// before it is touched, and sits on top of what it switches.
+//
+// GTK paints a background behind a scrolled view; the panel under it is the one
+// that should show.
+.player-tabs {
+  background-color: transparent;
+}
+
+.player-tab {
+  @extend %bare-button;
+  min-height: 26px;
+  // Not a cap's arc centre — nothing round sits at either end, the dot being
+  // inside the row rather than against the edge.
+  padding: 0 11px;
+  border-radius: $pill;
+  background-color: rgba(233, 233, 237, 0.06);
+  color: $text-dim;
+  transition:
+    background-color 150ms ease,
+    color 150ms ease;
+}
+
+.player-tab:hover {
+  background-color: $row-hover;
+  color: $text;
+}
+
+.player-tab.current {
+  background-color: rgba(145, 132, 217, 0.28);
+  color: $accent-on;
+}
+
+// Which one is making sound, which is not the same question as which one the
+// panel is driving — so it is a mark of its own rather than another state of
+// the tab.
+.player-tab-dot {
+  min-width: 5px;
+  min-height: 5px;
+  border-radius: $pill;
+  background-color: $accent-text;
+}
+
+.player-tab.current .player-tab-dot {
+  background-color: $accent-on;
+}
+
+// The theme's own weight for anything clickable is bold (see `%bare-button`),
+// and these are names.
+.player-tab-name {
+  font-size: 12px;
+  font-weight: 500;
 }
 
 // The art and the track, which together are the click that asks the player to
@@ -801,6 +845,10 @@ $clock-size: 14px;
   min-height: 84px;
   border-radius: 16px;
   background-color: rgba(145, 132, 217, 0.16);
+}
+
+.media-art-glyph {
+  color: $accent-text;
 }
 
 // Four lines, as the design stacks them: where it is playing, what it is, who

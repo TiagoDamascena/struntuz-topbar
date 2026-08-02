@@ -12,12 +12,14 @@ import lock from "inline:../icons/struntuz-lock-symbolic.svg"
 import logout from "inline:../icons/struntuz-logout-symbolic.svg"
 import moon from "inline:../icons/struntuz-moon-symbolic.svg"
 import moonStars from "inline:../icons/struntuz-moon-stars-symbolic.svg"
+import music from "inline:../icons/struntuz-music-symbolic.svg"
 import pause from "inline:../icons/struntuz-pause-symbolic.svg"
 import pauseFill from "inline:../icons/struntuz-pause-fill-symbolic.svg"
 import play from "inline:../icons/struntuz-play-symbolic.svg"
 import playFill from "inline:../icons/struntuz-play-fill-symbolic.svg"
 import power from "inline:../icons/struntuz-power-symbolic.svg"
 import repeat from "inline:../icons/struntuz-repeat-symbolic.svg"
+import repeatOne from "inline:../icons/struntuz-repeat-one-symbolic.svg"
 import restart from "inline:../icons/struntuz-restart-symbolic.svg"
 import shuffle from "inline:../icons/struntuz-shuffle-symbolic.svg"
 import sliders from "inline:../icons/struntuz-sliders-symbolic.svg"
@@ -60,6 +62,12 @@ export const Icons = {
   trackNext: "struntuz-track-next-symbolic",
   shuffle: "struntuz-shuffle-symbolic",
   repeat: "struntuz-repeat-symbolic",
+  // The same arrows with a 1 in them: looping one track and looping the list
+  // are two states of one button, so they have to be two glyphs or the button
+  // has only the tooltip to tell them apart.
+  repeatOne: "struntuz-repeat-one-symbolic",
+  // A track with no cover wears this rather than an empty tile.
+  music: "struntuz-music-symbolic",
 } as const
 
 // Play and pause, twice over, on the same rule the volume ramp follows: outline
@@ -123,6 +131,8 @@ const SOURCES: Record<string, string> = {
   [Icons.trackNext]: trackNext,
   [Icons.shuffle]: shuffle,
   [Icons.repeat]: repeat,
+  [Icons.repeatOne]: repeatOne,
+  [Icons.music]: music,
   [PlayIcons.outline.play]: play,
   [PlayIcons.outline.pause]: pause,
   [PlayIcons.fill.play]: playFill,

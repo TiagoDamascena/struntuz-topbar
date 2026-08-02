@@ -1,6 +1,6 @@
 import { Accessor, createBinding, createComputed, createState } from "ags"
 import AstalMpris from "gi://AstalMpris"
-import { PlayIcons, type PlayWeight } from "./icons"
+import { Icons, PlayIcons, type PlayWeight } from "./icons"
 import { t } from "./i18n"
 
 export type Player = AstalMpris.Player
@@ -107,12 +107,20 @@ export function activePlayerName(): Accessor<string> {
   return fromPlayer((player) => createBinding(player, "identity").as(() => playerName(player)), "")
 }
 
-// What one row of the player list has under the application's name. It is that
-// list's whole reason to exist: two players are told apart by what they are
-// playing far sooner than by which of them is called what.
+// What a tab says when the pointer is on it. The tab itself is only the
+// application's name, since that is what fits; two players are told apart by
+// what they are playing far sooner than by which of them is called what, so
+// this is where that goes.
 export function playerTrack(player: Player): Accessor<string> {
   const [title, artist] = [createBinding(player, "title"), createBinding(player, "artist")]
   return createComputed(() => [title(), artist()].filter(Boolean).join(" · "))
+}
+
+// Whether that one, rather than the one being shown, is making sound. It is
+// what puts the dot on a tab — with two players open, which of them is playing
+// is the question the row is there to answer.
+export function isPlayerPlaying(player: Player): Accessor<boolean> {
+  return createBinding(player, "playbackStatus").as((status) => status === PlaybackStatus.PLAYING)
 }
 
 export function trackTitle(): Accessor<string> {
@@ -258,9 +266,21 @@ export function loopOn(): Accessor<boolean> {
   )
 }
 
-// Which of the three the button is currently on, for its tooltip. The glyph
-// cannot say it on its own: the set has one repeat symbol, so looping a track
-// and looping a playlist light the same shape.
+// Looping one track is its own glyph, so the button says which of the two it
+// is rather than leaving it to the tooltip. Off takes the plain arrows unlit,
+// which is the state they read as anyway.
+export function loopIcon(): Accessor<string> {
+  return fromPlayer(
+    (player) =>
+      createBinding(player, "loopStatus").as((status) =>
+        status === Loop.TRACK ? Icons.repeatOne : Icons.repeat,
+      ),
+    Icons.repeat,
+  )
+}
+
+// Which of the three it is on, for the tooltip: the glyph separates one track
+// from the rest, and the words separate a list from nothing.
 export function loopLabel(): Accessor<string> {
   return fromPlayer(
     (player) =>
