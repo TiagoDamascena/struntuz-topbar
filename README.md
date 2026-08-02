@@ -13,6 +13,14 @@ NixOS the whole thing is one `enable = true`.
 - **Clock** — time and date, with configurable formats and localized names.
 - **Control centre** — a panel with the user's avatar, name and battery, and a
   power menu: lock, suspend, log out, restart, shut down.
+- **Media** — a pill beside the workspaces showing what is playing, with three
+  bars that move while it does. It opens a panel with the cover art, the track,
+  a draggable position line, and play, previous, next, shuffle and repeat —
+  each of which is drawn only when the player says it answers it. Clicking the
+  cover asks the player to come to the front. Anything speaking
+  [MPRIS](https://specifications.freedesktop.org/mpris-spec/latest/) is a
+  player, so when more than one is running the panel lists them and you pick;
+  otherwise it follows whatever is playing.
 - **Notifications** — the bar is the session's notification daemon. Cards appear
   in the corner and stay in the control centre's list until cleared. Clicking a
   card or a row hands the click back to the application that sent it, which is
@@ -282,12 +290,13 @@ blur itself — its windows are transparent, so there is nothing beneath them fo
 GTK to blur. **Blurring is your compositor's job, and configuring it is up to
 you.** Without it everything still renders, just flat over the wallpaper.
 
-The bar puts its three windows on layer namespaces you can match against:
+The bar puts its four windows on layer namespaces you can match against:
 
 | Namespace | Window |
 | --- | --- |
 | `struntuz-topbar` | the bar itself |
 | `struntuz-control-center` | the control centre panel |
+| `struntuz-media` | the media panel |
 | `struntuz-toasts` | the notification cards |
 
 On Hyprland, one `layerrule` per namespace in `hyprland.conf`:
@@ -305,6 +314,13 @@ layerrule {
   blur=on
   ignore_alpha=0
   match:namespace=struntuz-control-center
+}
+
+layerrule {
+  name=struntuz-media-blur
+  blur=on
+  ignore_alpha=0
+  match:namespace=struntuz-media
 }
 
 layerrule {
@@ -342,6 +358,44 @@ The menu is a tint like the panels are, so it wants that line the way they want
 theirs — without it you get the window behind it rather than a blur of it. Note
 that `decoration:blur:popups` is a different setting and will not do: that one
 governs the popups of ordinary windows, not of a layer surface.
+
+## Media
+
+The pill and its panel are MPRIS, and MPRIS is only what a player chose to
+publish — so the panel draws a control when the player says it answers it and
+leaves it out when it does not. A browser tab usually offers play, previous and
+next and nothing else; a desktop player usually offers the lot. There is
+nothing to configure: no player means no pill at all.
+
+Two things the design sketches are **not possible over MPRIS**, and are left
+out rather than faked:
+
+- **Liking or saving a track.** There is no such method or writable property in
+  the spec. `xesam:userRating` is metadata a player publishes about a track,
+  not a switch a client can throw, and no mainstream player exposes its own
+  library as MPRIS.
+- **The queue, or "up next".** The spec does have optional `TrackList` and
+  `Playlists` interfaces, but `AstalMpris` does not bind them, so a client
+  built on it cannot read a queue. The space goes to the list of *players*
+  instead, which is the thing that actually gets in the way.
+
+**`playerctld` is ignored.** It registers an MPRIS name of its own and mirrors
+whichever real player was last active, so counting it lists every track twice
+and can leave the bar controlling the proxy rather than the application. It
+exists to give a single-player client the "whatever is playing" this bar works
+out for itself, so it is dropped. Running it alongside the bar is harmless.
+
+**Cover art needs a TLS backend.** Astal fetches `mpris:artUrl` into its own
+cache, and for Spotify — and every other streaming player — that is an https
+URL. The package carries `glib-networking` for it. If you build the bar
+yourself, without it the art silently never appears and the log says
+`TLS support is not available`.
+
+Clicking the cover asks the player to raise its window, which comes with the
+same catch as clicking a notification below: MPRIS's `Raise` is a request, and
+whether it is honoured is your compositor's call. MPRIS has no
+xdg-activation token to hand over either, so `misc:focus_on_activate` is the
+whole of what makes it work on Hyprland.
 
 ## Clicking a notification
 

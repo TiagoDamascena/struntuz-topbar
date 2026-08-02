@@ -12,8 +12,14 @@ import lock from "inline:../icons/struntuz-lock-symbolic.svg"
 import logout from "inline:../icons/struntuz-logout-symbolic.svg"
 import moon from "inline:../icons/struntuz-moon-symbolic.svg"
 import moonStars from "inline:../icons/struntuz-moon-stars-symbolic.svg"
+import pause from "inline:../icons/struntuz-pause-symbolic.svg"
+import pauseFill from "inline:../icons/struntuz-pause-fill-symbolic.svg"
+import play from "inline:../icons/struntuz-play-symbolic.svg"
+import playFill from "inline:../icons/struntuz-play-fill-symbolic.svg"
 import power from "inline:../icons/struntuz-power-symbolic.svg"
+import repeat from "inline:../icons/struntuz-repeat-symbolic.svg"
 import restart from "inline:../icons/struntuz-restart-symbolic.svg"
+import shuffle from "inline:../icons/struntuz-shuffle-symbolic.svg"
 import sliders from "inline:../icons/struntuz-sliders-symbolic.svg"
 import speaker from "inline:../icons/struntuz-speaker-symbolic.svg"
 import speakerFill from "inline:../icons/struntuz-speaker-fill-symbolic.svg"
@@ -25,6 +31,8 @@ import speakerMedium from "inline:../icons/struntuz-speaker-medium-symbolic.svg"
 import speakerMediumFill from "inline:../icons/struntuz-speaker-medium-fill-symbolic.svg"
 import speakerSlash from "inline:../icons/struntuz-speaker-slash-symbolic.svg"
 import speakerSlashFill from "inline:../icons/struntuz-speaker-slash-fill-symbolic.svg"
+import trackNext from "inline:../icons/struntuz-track-next-symbolic.svg"
+import trackPrevious from "inline:../icons/struntuz-track-previous-symbolic.svg"
 
 // Names, not paths: everything downstream asks the icon theme, so a widget never
 // knows whether the icon shipped with the bar or came from the user's theme.
@@ -46,7 +54,29 @@ export const Icons = {
   power: "struntuz-power-symbolic",
   restart: "struntuz-restart-symbolic",
   suspend: "struntuz-moon-symbolic",
+  // The transport. `trackNext` is not `forward`: that one is the chevron the
+  // sub-panels open on, and these two are the bar at the end of a track.
+  trackPrevious: "struntuz-track-previous-symbolic",
+  trackNext: "struntuz-track-next-symbolic",
+  shuffle: "struntuz-shuffle-symbolic",
+  repeat: "struntuz-repeat-symbolic",
 } as const
+
+// Play and pause, twice over, on the same rule the volume ramp follows: outline
+// in the panel, filled on the bar. The pill's glyph is a state and not a
+// control, so the weight is what has to carry it at 12px of ink.
+export const PlayIcons = {
+  outline: {
+    play: "struntuz-play-symbolic",
+    pause: "struntuz-pause-symbolic",
+  },
+  fill: {
+    play: "struntuz-play-fill-symbolic",
+    pause: "struntuz-pause-fill-symbolic",
+  },
+} as const
+
+export type PlayWeight = keyof typeof PlayIcons
 
 // The volume ramp: how many waves is how loud, so the glyph carries the number
 // the label shows rather than decorating it. Every step is drawn on the same
@@ -89,6 +119,14 @@ const SOURCES: Record<string, string> = {
   [Icons.power]: power,
   [Icons.restart]: restart,
   [Icons.suspend]: moon,
+  [Icons.trackPrevious]: trackPrevious,
+  [Icons.trackNext]: trackNext,
+  [Icons.shuffle]: shuffle,
+  [Icons.repeat]: repeat,
+  [PlayIcons.outline.play]: play,
+  [PlayIcons.outline.pause]: pause,
+  [PlayIcons.fill.play]: playFill,
+  [PlayIcons.fill.pause]: pauseFill,
   // The bare speaker is only the ramp's 0% now — the audio menu's rows wear
   // `high`, since a device in that list is never the silent one.
   [VolumeIcons.outline.silent]: speaker,

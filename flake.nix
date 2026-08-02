@@ -17,9 +17,17 @@
   };
 
   outputs =
-    { self, nixpkgs, ags, astal }:
+    {
+      self,
+      nixpkgs,
+      ags,
+      astal,
+    }:
     let
-      systems = [ "x86_64-linux" "aarch64-linux" ];
+      systems = [
+        "x86_64-linux"
+        "aarch64-linux"
+      ];
       forAllSystems =
         f:
         nixpkgs.lib.genAttrs systems (
@@ -66,7 +74,15 @@
             buildInputs = [
               pkgs.glib
               pkgs.gjs
-            ] ++ astalLibsFor system;
+              # The GIO TLS backend. Astal caches a player's cover art by
+              # fetching `mpris:artUrl`, which for Spotify and every other
+              # streaming player is an https URL — without this the fetch fails
+              # with "TLS support is not available" and the media panel shows
+              # its empty tile forever. wrapGAppsHook4 puts it on
+              # GIO_EXTRA_MODULES from here.
+              pkgs.glib-networking
+            ]
+            ++ astalLibsFor system;
 
             installPhase = ''
               runHook preInstall
@@ -100,7 +116,10 @@
             packages = [ agsDev ];
 
             # Symlinks so tsserver resolves `ags`/`gnim`; @girs generated on first entry.
+            # The TLS backend is exported by hand here, since a dev shell has no
+            # wrapper to put it on the path the way the package does.
             shellHook = ''
+              export GIO_EXTRA_MODULES="${pkgs.glib-networking}/lib/gio/modules''${GIO_EXTRA_MODULES:+:$GIO_EXTRA_MODULES}"
               mkdir -p node_modules
               ln -sfn ${agsBase}/share/ags/js node_modules/ags
               ln -sfn ${agsBase}/share/ags/js/node_modules/gnim node_modules/gnim

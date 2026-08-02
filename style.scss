@@ -151,6 +151,81 @@ window.background {
   background-color: $ws-hover;
 }
 
+// The media pill. A capsule of its own rather than a `.pill`, because it is a
+// button: `%bare-button` is declared after `.pill` in this file, so extending it
+// would take the fill and the edge back off again.
+.media {
+  @extend %bare-button;
+  min-height: $pill-height - 2px;
+  // Nothing round inside, so neither end is held to a cap's arc centre. The
+  // left is tighter than the right because what starts there is 9px of bar and
+  // what ends there is a glyph.
+  padding: 0 14px 0 11px;
+  border: 1px solid $pill-edge;
+  border-radius: $pill;
+  background-color: $pill-bg;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease;
+}
+
+.media:hover {
+  background-color: rgba(22, 24, 38, 0.5);
+}
+
+// Held open, not hovered, like the control-centre toggle: the pill stays lit
+// for as long as the panel it opened is on screen.
+.media.open {
+  border-color: rgba(145, 132, 217, 0.5);
+  background-color: rgba(145, 132, 217, 0.26);
+}
+
+// The equalizer. Its height is fixed here and not left to the tallest bar of
+// the moment, or the pill would breathe with the wave.
+.eq {
+  min-height: 13px;
+}
+
+// The transition is the animation: GTK4's stylesheet has no keyframes, so
+// `widget/Media.tsx` walks a step every 170ms and each step is one of these
+// four heights moved into. That 170 is this duration written a second time.
+.eq-bar {
+  min-width: 3px;
+  border-radius: 2px;
+  // The lift of the accent rather than the accent itself, which the design can
+  // use because its bar sits on a darker fill than this one: 3px of #9184d9
+  // over the pill reads as grey.
+  background-color: $accent-text;
+  transition: min-height 170ms ease-in-out;
+}
+
+.eq-bar.level-0 {
+  min-height: 4px;
+}
+
+.eq-bar.level-1 {
+  min-height: 7px;
+}
+
+.eq-bar.level-2 {
+  min-height: 10px;
+}
+
+.eq-bar.level-3 {
+  min-height: 13px;
+}
+
+.media-label {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+// The state and not a second control — the whole pill is the button — so it
+// sits back the way the design's does.
+.media-state {
+  color: $text-dim;
+}
+
 // One size for both runs. The design draws the date and the time a pixel apart,
 // but each label centres its own line box, so that difference lands their
 // baselines a pixel apart and reads as crooked; at these sizes it carried no
@@ -619,31 +694,34 @@ $clock-size: 14px;
   color: $text;
 }
 
-// What the volume menu lists under the bar. The section label is the design's
-// way of saying the list is one kind of thing, and the rule after it runs out
-// rather than reaching the edge.
-// No padding on the right, so the rule ends where the head's does: the head
-// spans the panel's own padding and this row sat 10px inside it, which is what
-// made one line look like a different line from the other. The left inset is
-// the rows' instead, so the label starts over their icons.
-.audio-section {
+// The head over a list inside a panel — the audio menu's devices, the media
+// panel's players. The section label is the design's way of saying the list is
+// one kind of thing, and the rule after it runs out rather than reaching the
+// edge.
+// No padding on the right, so the rule ends where the panel head's does: that
+// one spans the panel's own padding and this row sat 10px inside it, which is
+// what made one line look like a different line from the other. The left inset
+// is the rows' instead, so the label starts over their contents.
+.panel-section {
   padding: 6px 0 8px 10px;
 }
 
-.audio-section-label {
+.panel-section-label {
   font-size: 13px;
   color: $text-dim;
 }
 
-.audio-section-rule {
+.panel-section-rule {
   min-height: 1px;
   @include rule;
 }
 
-// A device. Same rounded rectangle as a power row, and the one that is playing
-// is tinted rather than only ticked — the check says which, the tint says it
-// from across the panel.
-.audio-row {
+// A row in one of those lists: a device to play through, a player to control.
+// Same rounded rectangle as a power row, and the one in use is tinted rather
+// than only ticked — the check says which, the tint says it from across the
+// panel. Shared rather than written per list, which is how the panel rules
+// drifted apart before they were one mixin.
+.list-row {
   @extend %bare-button;
   min-height: 46px;
   padding: 0 10px;
@@ -652,35 +730,220 @@ $clock-size: 14px;
   transition: background-color 150ms ease;
 }
 
-.audio-row:hover {
+.list-row:hover {
   background-color: $row-hover;
 }
 
-.audio-row.current {
+.list-row.current {
   background-color: rgba(145, 132, 217, 0.16);
 }
 
-.audio-row.current:hover {
+.list-row.current:hover {
   background-color: rgba(145, 132, 217, 0.26);
 }
 
 // A bare glyph, not a disc: the row already carries a tint of its own, and a
 // second shape under the icon would read as a button inside it.
-.audio-row-icon {
+.list-row-icon {
   color: $text-dim;
 }
 
-.audio-row.current .audio-row-icon {
+.list-row.current .list-row-icon {
   color: $accent-text;
 }
 
-.audio-row-name {
+.list-row-name {
   font-size: 14px;
   font-weight: 500;
 }
 
-.audio-row-check {
+// The second line, where a row has one. Same negative margin as the power
+// rows: the gap Pango leaves between the two labels comes back off so the pair
+// reads as one block, and the weight is said because a button's own is bold.
+.list-row-meta {
+  margin-top: -3px;
+  font-size: 12px;
+  font-weight: 400;
+  color: $text-faint;
+}
+
+.list-row-check {
   color: $accent-text;
+}
+
+// The media panel: the one that hangs off the left of the bar rather than the
+// right. Tighter than the sub-panels, since what is in it is a picture, a line
+// and a row of buttons rather than a list.
+.media-panel {
+  padding: 10px 10px 8px;
+}
+
+// The art and the track, which together are the click that asks the player to
+// come to the front. The padding is the hover's room — without it the tint
+// would hug the picture — and it is what puts the art 14px inside the panel,
+// where the design starts it.
+.media-head {
+  padding: 4px;
+  border-radius: 20px;
+  transition: background-color 150ms ease;
+}
+
+// Only when there is something to raise: a player that says it cannot is a
+// click that would do nothing, and a hover is what promises otherwise.
+.media-head.raisable:hover {
+  background-color: $row-hover;
+}
+
+// The design's 96 brought down with the bar. The tint is what a track with no
+// cover wears, so the head keeps its shape either way.
+.media-art {
+  min-width: 84px;
+  min-height: 84px;
+  border-radius: 16px;
+  background-color: rgba(145, 132, 217, 0.16);
+}
+
+// Four lines, as the design stacks them: where it is playing, what it is, who
+// it is by, what it came off. Each is one size on its own row, which is the
+// only way two runs of type share a baseline here.
+.media-source {
+  font-size: 12px;
+  color: $text-faint;
+}
+
+.media-track {
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.media-artist {
+  font-size: 13px;
+  color: $text-dim;
+}
+
+.media-album {
+  font-size: 12px;
+  color: $accent-text;
+}
+
+// Where the track is. Everything the theme draws on a scale comes off first,
+// the way it does on the volume bar — but this one keeps a handle, since what
+// the design draws is a point on a line and not a fill to an edge, and a fill
+// with nothing at its end has nothing to take hold of.
+.media-seek {
+  min-height: 14px;
+  margin: 0;
+  padding: 0;
+}
+
+.media-seek trough {
+  min-height: 5px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: $pill;
+  background-color: rgba(233, 233, 237, 0.12);
+  background-image: none;
+  box-shadow: none;
+}
+
+.media-seek highlight {
+  border: 0;
+  border-radius: $pill;
+  background-color: $accent;
+  background-image: none;
+  box-shadow: none;
+}
+
+// The negative margin is what lets a 12px handle overhang a 5px trough: what
+// GTK measures is the box less the margins, which comes back to the trough's
+// own height.
+.media-seek slider {
+  min-width: 12px;
+  min-height: 12px;
+  margin: -4px;
+  border: 0;
+  border-radius: $pill;
+  background-color: $text;
+  background-image: none;
+  box-shadow: none;
+}
+
+// A player that publishes a length but will not be moved along it — the line
+// still says where the track is, it just cannot be taken hold of.
+.media-seek:disabled slider {
+  background-color: rgba(233, 233, 237, 0.3);
+}
+
+.media-times {
+  padding: 0 4px;
+}
+
+.media-time {
+  font-size: 12px;
+  color: $text-faint;
+}
+
+.media-transport {
+  padding: 2px 0 4px;
+}
+
+// The four round controls around the play button. The two at the ends hold a
+// state and sit back until it is on; the two beside them only move a track, so
+// they start at the weight an icon rests at everywhere else in the bar.
+.media-button {
+  @extend %bare-button;
+  min-width: 38px;
+  min-height: 38px;
+  border-radius: $pill;
+  color: $text-faint;
+  transition:
+    background-color 150ms ease,
+    color 150ms ease;
+}
+
+.media-button.step {
+  min-width: 42px;
+  min-height: 42px;
+  color: $icon-idle;
+}
+
+.media-button:hover {
+  background-color: $hover;
+  color: $text;
+}
+
+.media-button.on {
+  background-color: rgba(145, 132, 217, 0.28);
+  color: $accent-on;
+}
+
+// A player at the end of its list still draws the button, dimmed: the row is
+// five shapes wide whatever the track is, and one going missing would move the
+// other four.
+.media-button:disabled {
+  background-color: transparent;
+  color: rgba(233, 233, 237, 0.22);
+}
+
+// The one filled control in any of the panels, and the only accent surface in
+// this one — it is what the whole row is about.
+.media-play {
+  @extend %bare-button;
+  min-width: 50px;
+  min-height: 50px;
+  border-radius: $pill;
+  background-color: $accent;
+  // The panel's own dark on the accent, as on `.badge` and the mute disc: a
+  // glyph filled with lit type would not hold against a surface that bright.
+  color: #161826;
+  transition: box-shadow 150ms ease;
+}
+
+// A ring rather than a fill, like the mute disc: it is already the brightest
+// thing in the panel, so there is nothing left to light it up with.
+.media-play:hover {
+  box-shadow: 0 0 0 4px rgba(145, 132, 217, 0.4);
 }
 
 // The disc every notification wears, in the list and on a toast. It is the

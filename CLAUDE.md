@@ -129,6 +129,39 @@ greeter.
   re-subscribing computed `fromSpeaker` is in `lib/audio.ts`. The widget is
   `widget/Tray.tsx`, and the three buttons it answers are the spec's:
   `Activate`, the menu, `SecondaryActivate`.
+- **`lib/mpris.ts`** — what is playing, over `AstalMpris`. Not an exclusive claim
+  and not a nullable source either: the manager is a watcher on the session bus
+  and answers an empty list, so what can be missing is a player and not the
+  library. It holds no player, for the reason `lib/audio.ts` holds no endpoint —
+  `fromPlayer` is `fromSpeaker` with a different subject. What it does hold is a
+  bus name, the one the panel's list picked, and that is a name rather than an
+  object because a player that quits and comes back is a new `Player`; a name
+  that is no longer in the list falls straight through to the rule (whatever is
+  playing, else whatever turned up first), so a player quitting hands the pill
+  to the next one rather than emptying it. Both `players()` and `activePlayer()`
+  are memoized where `lib/audio.ts` rebuilds per call: `active` re-subscribes to
+  every player's status, and a copy per accessor would put that behind each of
+  the fifteen readings the panel takes. `playerctld` is filtered out — it takes
+  an mpris name of its own and mirrors the last active player, so counting it
+  lists every track twice (verified: two identical "Spotify" rows) and can leave
+  the bar driving the proxy. Position is astal's own once-a-second poll of the
+  player, since mpris never announces it; `length` is 0 for a stream, which is
+  what the seek row's visibility is off. Cover art is `coverArt` and not
+  `artUrl`: astal downloads an http one into its cache and reports a local path
+  — **which needs `glib-networking` in the runtime environment**, or the fetch
+  fails with "TLS support is not available" and the tile stays empty with
+  nothing else to say why. Hence it is in `flake.nix`'s `buildInputs` and
+  exported by hand in the dev shell.
+  Two of the design's own controls are not in the protocol and are left out
+  rather than faked: there is no like/save (`xesam:userRating` is metadata about
+  a track, not a switch), and no queue (`TrackList`/`Playlists` are optional
+  interfaces astal does not bind). The panel's list is of *players* instead.
+  `widget/Media.tsx` is the pill and `widget/MediaPanel.tsx` the panel — a
+  window of its own mirroring the control centre's, since the design hangs it
+  off the left end of the bar. The two are never up at once: each covers the
+  whole output with a click-away scrim, so the second would be catching the
+  first's dismissals, which is why `widget/Bar.tsx` closes one when the other
+  opens.
 - **`lib/image.ts`** — one crop, shared by every round picture in the bar: the
   centred square a `Gtk.Image` needs before a `border-radius` can read as a
   circle.
@@ -164,6 +197,11 @@ room left around its glyph, and no amount of padding gives it back (see the
 concentricity note below). 40 is where the ends of the pill and the gap between
 two glyphs measure the same, at 12–14px.
 
+A list inside a panel is `.panel-section*` and `.list-row*` in `style.scss`,
+shared by the audio menu's devices and the media panel's players. They were
+`.audio-*` while there was one such list; the second one is what made them
+shared rather than copied, on the same reasoning as the panel rules below.
+
 The panel rules are one `@mixin rule` in `style.scss` and not a gradient per
 head. They were written out three times and the audio menu's had drifted into a
 different line — solid at one end where the heads fade at both, and stopping
@@ -180,7 +218,14 @@ carries on a numeral and disappears on an 8px dot.
 
 **GTK4 does animate `min-width`**, so the focused dot grows into its bar through
 a CSS `transition` rather than any widget code (measured: 19 → 26px across the
-frames after a switch). Worth remembering for the items still to come.
+frames after a switch). Worth remembering for the items still to come — the
+media pill's equalizer is the same lever on `min-height`: GTK4's stylesheet has
+transitions and no keyframes, so `widget/Media.tsx` walks a six-step wave every
+170ms and each step is one of four height classes moved into. Sampled off the
+design's own 1.1s keyframe, which is why the cycle comes to 1.02s and the phase
+between two bars is its .25s stagger. The timer runs only while something is
+playing, which is what `animation-play-state: paused` says there — and the
+duration is written twice, in the widget and in `.eq-bar`'s transition.
 
 `flake.nix`'s `astalLibsFor` is the single list of Astal libraries, feeding both
 the package build and the dev shell. It currently carries `io`, `astal4`,
@@ -279,7 +324,17 @@ the sources behind the waybar setup this replaces, plus the notification daemon.
   17 in the bar, against the 15–18 the rest of the set takes. Ink extents in units of 24, for
   the next one: bell 22.0×24.0, bell-slash 22.2×24.0, moon-stars 23.1×24.0,
   power 23.0×23.0, sliders 22.4×22.2, check 20.2×20.1, lock 16.0×23.0, back and
-  forward 11.5×20.4 each, close 12.2×12.2. The volume ramp: speaker 12.0×17.1,
+  forward 11.5×20.4 each, close 12.2×12.2.
+  The media set is the shortest in the file and so takes the largest
+  `pixelSize`s: play and play.fill 17.6×19.8, pause 9.8×19.4, pause.fill
+  14.4×19.4, track-previous and track-next 18.0×18.0, shuffle 24.0×19.0, repeat
+  24.0×20.2. Shuffle and repeat exported at 27×24 and 25×24 and were scaled into
+  the shared canvas with a `<g transform>` rather than left wide — the ink
+  centre is on 12,12 in both, measured after the transform. A `<g>` costs
+  nothing in recolouring: GTK forces `fill` on the `path`s inside it either way.
+  What that leaves is a row of controls at 16–22 (`widget/MediaPanel.tsx`) and a
+  bar glyph at 15, which is 13–18px and 12px of ink — the design's own
+  proportion to the button each sits in. The volume ramp: speaker 12.0×17.1,
   low 16.6×17.1, medium 20.3×17.1, high 24.0×22.3, slash 18.4×18.6 — the cone is
   17.1 in the first three because it is the *same* cone at the same place on the
   shared canvas, so the ramp gains waves without the speaker moving or resizing.

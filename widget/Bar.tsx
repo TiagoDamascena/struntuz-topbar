@@ -4,6 +4,8 @@ import { createComputed, createState } from "ags"
 import Clock from "./Clock"
 import ControlCenter, { type View } from "./ControlCenter"
 import Controls from "./Controls"
+import Media from "./Media"
+import MediaPanel from "./MediaPanel"
 import Toasts from "./Toasts"
 import Tray from "./Tray"
 import Workspaces from "./Workspaces"
@@ -20,7 +22,14 @@ export default function Bar(gdkmonitor: Gdk.Monitor) {
   // sub-panel it stands for and lights up while that one is showing.
   const [view, setView] = createState<View>("main")
 
+  // The media panel, on the other end of the bar. Two of them are never up at
+  // once: each is a window over the whole output with a click-away scrim, so
+  // the second one to open would be catching the first one's dismissals. The
+  // design closes them against each other for the same reason.
+  const [media, setMedia] = createState(false)
+
   function show(next: View) {
+    setMedia(false)
     setView(next)
     setOpen(true)
   }
@@ -31,7 +40,17 @@ export default function Bar(gdkmonitor: Gdk.Monitor) {
     setOpen(false)
   }
 
+  function showMedia() {
+    setOpen(false)
+    setMedia(true)
+  }
+
+  function hideMedia() {
+    setMedia(false)
+  }
+
   ControlCenter({ gdkmonitor, open, view, setView, close: hide })
+  MediaPanel({ gdkmonitor, open: media, close: hideMedia })
   Toasts({ gdkmonitor, hidden: open })
 
   // Lit only while the panel is showing what it opens, so the toggle and the
@@ -52,8 +71,10 @@ export default function Bar(gdkmonitor: Gdk.Monitor) {
       application={app}
     >
       <centerbox class="bar">
-        <box $type="start" valign={Gtk.Align.CENTER}>
+        {/* The same gap the end of the strip leaves between two pills. */}
+        <box $type="start" spacing={7} valign={Gtk.Align.CENTER}>
           <Workspaces />
+          <Media open={media} onToggle={() => (media.get() ? hideMedia() : showMedia())} />
         </box>
         <box $type="center" valign={Gtk.Align.CENTER}>
           <Clock />

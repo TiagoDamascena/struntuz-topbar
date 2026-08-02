@@ -32,6 +32,22 @@ export interface Strings {
   // is none.
   audioTooltip: string
 
+  // The bar pill's tooltip. `%s` is what is playing, as "title · artist".
+  mediaTooltipPlaying: string
+  mediaTooltipPaused: string
+  mediaUnknown: string
+  mediaPlay: string
+  mediaPause: string
+  mediaPrevious: string
+  mediaNext: string
+  mediaShuffle: string
+  mediaRepeat: string
+  mediaRepeatOff: string
+  mediaRepeatTrack: string
+  mediaRepeatAll: string
+  // The section over the list of everything else that is playing.
+  mediaPlayers: string
+
   notifications: string
   notificationsClear: string
   notificationsEmpty: string
@@ -87,6 +103,20 @@ const EN: Strings = {
   audioOutput: "Output device",
   audioTooltip: "Sound — %s",
 
+  mediaTooltipPlaying: "Playing — %s",
+  mediaTooltipPaused: "Paused — %s",
+  mediaUnknown: "Unknown track",
+  mediaPlay: "Play",
+  mediaPause: "Pause",
+  mediaPrevious: "Previous",
+  mediaNext: "Next",
+  mediaShuffle: "Shuffle",
+  mediaRepeat: "Repeat",
+  mediaRepeatOff: "Off",
+  mediaRepeatTrack: "This track",
+  mediaRepeatAll: "Playlist",
+  mediaPlayers: "Playing from",
+
   notifications: "Notifications",
   notificationsClear: "Clear all",
   notificationsEmpty: "Nothing new",
@@ -138,6 +168,20 @@ const PT_BR: Partial<Strings> = {
   audio: "Áudio",
   audioOutput: "Dispositivo de saída",
   audioTooltip: "Som — %s",
+
+  mediaTooltipPlaying: "Tocando — %s",
+  mediaTooltipPaused: "Pausado — %s",
+  mediaUnknown: "Faixa desconhecida",
+  mediaPlay: "Reproduzir",
+  mediaPause: "Pausar",
+  mediaPrevious: "Anterior",
+  mediaNext: "Próxima",
+  mediaShuffle: "Aleatório",
+  mediaRepeat: "Repetir",
+  mediaRepeatOff: "Desligado",
+  mediaRepeatTrack: "Esta faixa",
+  mediaRepeatAll: "Playlist",
+  mediaPlayers: "Tocando em",
 
   notifications: "Notificações",
   notificationsClear: "Limpar tudo",
