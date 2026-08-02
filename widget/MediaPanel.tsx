@@ -307,11 +307,14 @@ function PlayerTabs() {
   const many = all.as((list) => list.length > 1)
 
   return (
-    // Scrolled, so a fifth player pushes the row sideways rather than the
-    // panel wider: a `widthRequest` is a minimum, and a box asking for more
-    // than the column has would simply get it. The bin takes its content
-    // through `child` — a JSX child parents without telling it (CLAUDE.md).
-    <Gtk.ScrolledWindow
+    // Scrolled, so a fifth player pushes the row sideways rather than the panel
+    // wider: a `widthRequest` is a minimum, and a box asking for more than the
+    // column has would simply get it. What holds the width is
+    // `propagate-natural-width` staying at its default of false — the height is
+    // the one propagated, so the row is as tall as a tab and no taller. The bin
+    // takes its content through `child`, not as a JSX child (see the
+    // notification list).
+    <scrolledwindow
       class="player-tabs"
       visible={many}
       hscrollbarPolicy={Gtk.PolicyType.EXTERNAL}
