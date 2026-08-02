@@ -57,21 +57,33 @@ export function selectPlayer(player: Player): void {
 export function activePlayer(): Accessor<Player | null> {
   if (active) return active
 
+  // The last one handed out, so that nothing playing anywhere leaves the panel
+  // where it was rather than snapping back to whoever happened to arrive first.
+  // Pausing is not a reason for the panel to change what it is about.
+  let shown: Player | null = null
+
   const all = players()
   active = createComputed(() => {
     const current = all()
     if (current.length === 0) return null
 
     const picked = current.find((player) => player.busName === chosen())
-    if (picked) return picked
+    if (picked) return (shown = picked)
 
     // Whatever is making sound, else whatever turned up first. Reading each
     // player's status through a binding is what re-runs this when one of them
     // starts playing — the list itself only notifies on arrival and departure.
-    const playing = current.find(
-      (player) => createBinding(player, "playbackStatus")() === PlaybackStatus.PLAYING,
-    )
-    return playing ?? current[0]
+    //
+    // Every status is read, rather than stopping at the first match the way
+    // `find` would: what a computed tracks is what it happened to read, so an
+    // early exit would leave the players after the match unsubscribed and this
+    // would follow some of them and not others, depending on the order they
+    // arrived in.
+    const statuses = current.map((player) => createBinding(player, "playbackStatus")())
+    const playing = statuses.indexOf(PlaybackStatus.PLAYING)
+    if (playing >= 0) return (shown = current[playing])
+
+    return shown && current.includes(shown) ? shown : (shown = current[0])
   })
 
   return active
@@ -195,11 +207,57 @@ export function canRaise(): Accessor<boolean> {
   return fromPlayer((player) => createBinding(player, "canRaise"), false)
 }
 
+// A track's duration does not come and go, but `length` does: astal writes -1
+// whenever a metadata update arrives carrying no `mpris:length` (the else branch
+// of the lookup in its `player.vala` sets the property rather than leaving it),
+// and a player is free to send such an update at any time. Firefox re-publishes
+// metadata as a video runs and not all of those carry a duration, so the length
+// went 1472 → -1 → 1472 and the progress row went in and out with it.
+//
+// So an update that says nothing about the duration is taken to say nothing:
+// the last known length stands until the track itself changes. A player that
+// never reports one — a stream, a radio — still never gets a row.
+//
+// Cached per player, because this is the one reading in the module with a
+// memory: `fromPlayer` builds a fresh accessor every time the active player is
+// recomputed, which is on every play and pause anywhere, and a memory that
+// resets that often is not one. Safe to hold onto — a computed registers no
+// scope cleanup, so nothing tears it down while the player is still here.
+const lengths = new WeakMap<Player, Accessor<number>>()
+
+function heldLength(player: Player): Accessor<number> {
+  const cached = lengths.get(player)
+  if (cached) return cached
+
+  const [length, trackid] = [
+    createBinding(player, "length"),
+    createBinding(player, "trackid"),
+  ]
+
+  let track = trackid.get()
+  let known = 0
+
+  const held = createComputed(() => {
+    // A different track is a different duration, so the memory starts over
+    // rather than lending the last one's.
+    if (trackid() !== track) {
+      track = trackid()
+      known = 0
+    }
+    const current = length()
+    if (current > 0) known = current
+    return known
+  })
+
+  lengths.set(player, held)
+  return held
+}
+
 // Seconds, both of them. `position` is astal's own second-by-second poll of the
 // player — mpris never announces it, since a position that advances on its own
 // would be a property changing every frame.
 export function trackLength(): Accessor<number> {
-  return fromPlayer((player) => createBinding(player, "length"), 0)
+  return fromPlayer(heldLength, 0)
 }
 
 export function trackPosition(): Accessor<number> {
