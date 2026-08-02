@@ -117,6 +117,18 @@ greeter.
   there opens the same panel and two capsules said they were two places to go.
   That file owns the badge as well, because the toggle is the last thing in the
   pill and so the pill's own top-right corner is the toggle's.
+- **`lib/tray.ts`** — the system tray, over `AstalTray`. Not the exclusive claim
+  the notification daemon is: astal takes `org.kde.StatusNotifierWatcher` when the
+  name is free and proxies whoever holds it otherwise, so another bar's tray runs
+  beside this one. What the module owes the widget is an order and a status: the
+  items come out of a hash table, as notifd's notifications do, so they are sorted
+  by `itemId` (bus name plus object path) or the icons reshuffle on every arrival,
+  and `PASSIVE` is filtered out because that is what the status means. The status
+  is read through a binding of its own per item, since the tray notifies `items`
+  on arrival and departure and never when one of them changes its mind — the same
+  re-subscribing computed `fromSpeaker` is in `lib/audio.ts`. The widget is
+  `widget/Tray.tsx`, and the three buttons it answers are the spec's:
+  `Activate`, the menu, `SecondaryActivate`.
 - **`lib/image.ts`** — one crop, shared by every round picture in the bar: the
   centred square a `Gtk.Image` needs before a `border-radius` can read as a
   circle.
@@ -407,6 +419,40 @@ the sources behind the waybar setup this replaces, plus the notification daemon.
   though, cannot be a prop: gnim peeks an accessor into the constructor, which
   runs before any page is added, and the stack warns that the name is not one of
   its children. Set it from `$`, which runs last.
+- **The tray's glyphs are not the bar's, which changes every lever.** They are
+  whatever the application registered, so `icons/` gains nothing when a tray
+  arrives and the numbers stepped off the set do not apply: `pixelSize` counts a
+  box that our SF Symbols fill 22–24 units of 24 and that a themed icon fills
+  nearly all of, hence 16 in `widget/Tray.tsx` against the bar's usual 15, which
+  lands both at ~14px of ink (measured: a tray glyph at rest and an `.icon-button`
+  glyph both peak at 180/255 over the pill). Dimming is `opacity` and not `color`
+  for the same reason — `color` reaches a symbolic icon and nothing else, while
+  0.7 of the widget puts a full-colour one at the same value `$icon-idle` gives
+  the rest of the bar (verified, and a hover lifts one glyph from 161 to 206
+  without touching its neighbours). And the design draws them bare, with no disc
+  under them: a round button in a pill has to be concentric with the cap, which
+  would pull the end glyphs in to 4px of padding and leave the tray reading as a
+  second controls pill.
+- **`ItemIsMenu` defaults to *true* in astal, so the primary click usually opens
+  the menu.** The property is optional in the spec and astal starts it true
+  (`tray/src/tray-item.vala`) rather than false, which is the appindicator reality
+  it defaults to — an appindicator item is a menu and nothing besides.
+  nm-applet, for one, publishes no `ItemIsMenu` at all (verified over `busctl`), so
+  a bar that ignores the flag clicks into nothing on most of what it shows.
+  Three things follow for the menu itself. It is a `Gtk.PopoverMenu` parented by
+  hand, since a popover is not a child of the widget it hangs off — and `For`
+  never destroys a GTK4 child (`cleanup` defaults to null in gnim's `For.ts`), so
+  it comes off in `onCleanup` rather than on a `destroy` that is not coming. Its
+  actions carry a `dbusmenu` prefix and have to be inserted on a parent of the
+  menu, which the popover is of its own contents. And it does work on a layer
+  surface with no keyboard focus (verified end to end against nm-applet's real
+  dbusmenu: sections, separators, a check item, a submenu), but the compositor's
+  blur `layerrule` matches namespaces and a popover is its own surface, so nothing
+  reaches it and `.tray-menu` is painted solid — at 0.94 the window behind it came
+  through at 5/255 and was visible on a screenshot.
+  For testing without a tray application: astal's watcher keys items by bus name
+  (`RegisterStatusNotifierItem` takes either a bus name or a path, never
+  `busname/path`), so a stub publishes one item per process.
 - **Never draw an icon. Ask the user for it.** `icons/` is one set with its own
   size relationships (below), and a glyph invented to fill a gap sits beside
   them rather than in them — it reads as the odd one out however carefully it is

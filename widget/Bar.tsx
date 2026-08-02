@@ -5,6 +5,7 @@ import Clock from "./Clock"
 import ControlCenter, { type View } from "./ControlCenter"
 import Controls from "./Controls"
 import Toasts from "./Toasts"
+import Tray from "./Tray"
 import Workspaces from "./Workspaces"
 import { BAR_SIDE, BAR_TOP } from "../lib/layout"
 
@@ -57,7 +58,11 @@ export default function Bar(gdkmonitor: Gdk.Monitor) {
         <box $type="center" valign={Gtk.Align.CENTER}>
           <Clock />
         </box>
-        <box $type="end" valign={Gtk.Align.CENTER} halign={Gtk.Align.END}>
+        {/* The design's own gap between two pills, brought down with the bar.
+            It is the first place the strip holds more than one, and an invisible
+            child takes its spacing with it — so an empty tray costs nothing. */}
+        <box $type="end" spacing={7} valign={Gtk.Align.CENTER} halign={Gtk.Align.END}>
+          <Tray />
           <Controls
             open={open}
             view={view}

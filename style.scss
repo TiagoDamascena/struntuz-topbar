@@ -262,6 +262,80 @@ $clock-size: 14px;
   font-weight: 500;
 }
 
+// The system tray: a glyph per application, and the widest spacing in the bar.
+// The design draws them as bare icons rather than as buttons — no disc under
+// them, lit or otherwise — and the geometry says the same: a round button in a
+// pill has to sit concentric with the cap (see `.icon-pill`), which would pull
+// the first and last glyph in to 4px of padding and leave this reading as a
+// second controls pill. What separates the two shapes is exactly this spacing.
+//
+// 14 against the clock's 18 and the controls' 4, and the design's own ratio to
+// the 12 the widget spaces two glyphs by — its 16 and 14 at a 44px bar. The ends
+// come out a little wider than the gaps, which is the design's proportion and not
+// a rounding: measured against a full box of icon, 14–15px at each end and 12–13
+// between two of them.
+.tray {
+  padding: 0 14px;
+}
+
+// The ink is what a hover moves here, and `opacity` is what moves it: an
+// application's tray icon is its own, so a symbolic one takes the bar's colour
+// and a full-colour one takes nothing from it. Dimming the widget carries both,
+// and 0.7 is `$icon-idle` — the same alpha the design sets on the strip.
+.tray-item {
+  opacity: 0.7;
+  transition: opacity 150ms ease;
+}
+
+// An application asking to be noticed gets what a hover gives it, that being the
+// one lever left over an icon the bar did not draw: its colours are the app's.
+.tray-item:hover,
+.tray-item.attention {
+  opacity: 1;
+}
+
+// The menu behind a tray glyph is the application's own — what it says and how
+// deep it goes is not the bar's business — but it arrives as a `Gtk.PopoverMenu`
+// in the theme's grey, hanging off a Nocturne pill. Only the surface and the row
+// are restyled.
+.tray-menu contents {
+  padding: 6px;
+  border: 1px solid $pill-edge;
+  // Not the panels' 22: the rows inside are 28 tall, and a radius that wide
+  // would bow past the first and the last of them.
+  border-radius: 14px;
+  // Solid, where every other surface in the bar is a tint. A popover is its own
+  // Wayland surface and the compositor's blur rule is written against the bar's
+  // namespace (README.md), so there is nothing behind this one to reveal — an
+  // alpha would only ghost whatever window it landed on into the type. It was
+  // 0.94 first and the window behind it came through at 5/255, visible on a
+  // screenshot. The design's own menus are opaque for the same reason.
+  background-color: #161826;
+  color: $text;
+}
+
+.tray-menu modelbutton {
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 8px;
+  // The theme's own weight for anything clickable is bold (see `%bare-button`),
+  // and these are rows of plain text.
+  font-size: 13px;
+  font-weight: 400;
+  color: $text-dim;
+}
+
+// The row's hover and not the accent a round button takes: an accent that wide
+// reads as a selection rather than as the pointer being there.
+.tray-menu modelbutton:hover {
+  background-color: $row-hover;
+  color: $text;
+}
+
+.tray-menu separator {
+  background-color: $divider;
+}
+
 // The panel column comes and goes in `widget/ControlCenter.tsx`, as a revealer
 // sliding it in from the right — nothing here. A CSS margin was tried first,
 // to carry the column off the output and back, and GTK does not animate one

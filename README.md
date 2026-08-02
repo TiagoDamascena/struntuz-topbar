@@ -27,6 +27,11 @@ NixOS the whole thing is one `enable = true`.
   play sound and switches to the one you pick. The speaker on the bar itself
   says where the sound is going and opens that menu in one click, and its waves
   are how loud it is — none at 0%, three at the top, a slash when muted.
+- **System tray** — a pill of application icons, hidden entirely while nothing is
+  in it. A left click opens the application's own menu, or sends it the click when
+  it has an action instead; a right click always goes for the menu, a middle click
+  for the application's secondary action. An icon asking for attention stops being
+  dimmed.
 - **Night light** — the tile beside it, warming the display through
   [hyprsunset](https://github.com/hyprwm/hyprsunset) by default. It runs
   commands, so any other filter does as well, and it reads the temperature back
@@ -316,6 +321,11 @@ themselves. With home-manager, the same rules go in
 
 To try one before writing it into your config,
 `hyprctl keyword layerrule blur,struntuz-topbar` applies until the next reload.
+
+A tray item's menu is not one of those windows: a popover is its own Wayland
+surface, hanging off the bar's rather than drawn in it, so none of the rules above
+reach it. It is painted solid for that reason and needs nothing from the
+compositor.
 
 ## Clicking a notification
 
