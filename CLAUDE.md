@@ -170,6 +170,37 @@ greeter.
   whole output with a click-away scrim, so the second would be catching the
   first's dismissals, which is why `widget/Bar.tsx` closes one when the other
   opens.
+- **`lib/battery.ts`** — how much is left, over `AstalBattery`. Not a nullable
+  source and not an exclusive claim: astal's default is upower's own
+  `DisplayDevice`, the aggregate it composes from every battery on the machine,
+  so a laptop with two of them reports one level and nothing here has to pick a
+  cell. A machine with none answers `isPresent` false rather than leaving the
+  library missing — absence is a reading, which is why the widget binds
+  `visible` where `widget/Segments.tsx`'s audio half returns early on
+  `hasAudio()`. The percentage is rounded once, here, and the glyph steps on
+  that rounded number rather than on the raw fraction, the rule `volumeIcon`
+  follows. The ramp is five casings 25 apart, stepped to the *nearest* one and
+  not to the band below it: five glyphs drawn at even quarters can only be read
+  as pictures of the level, and biasing them down would put an empty casing on
+  a battery with an hour left. So the low warning is a colour and not a sixth
+  glyph — `.segment-readout.low`, in Catppuccin peach, since the design draws
+  no battery running out and has no token for one. Charging is a *second ramp*
+  and not one glyph, which is the one place this set departs from what SF
+  Symbols ships: the stock family has only `battery.100percent.bolt`, so a
+  single charging glyph collapses every level into a full battery — rendered and
+  looked at, all five states drew identically, and a battery charging at 5% read
+  as one about to come off the charger. The bolt is a second thing to say and
+  does not get to cost the first, so it rides each step instead. `plugged` picks
+  the ramp and covers `FULLY_CHARGED` as well as `charging`: upower calls a full
+  battery on AC neither, and without that the bar would draw a discharging cell
+  on a machine with a cable in it — and at 100% it lands on the ramp's top step,
+  which is the one glyph where "full, with a bolt" is literally true. The
+  estimate is upower's, `timeToEmpty` or `timeToFull` depending which way it is
+  going, and it is left out until it is non-zero — it arrives late and reads as
+  0 until it does. `lib/session.ts` holds no battery of its own any more: its
+  `userStatus` is this module's line with a `user@host` fallback for a machine
+  without one, and both take `hhmm` from here, since an uptime and a
+  time-to-empty are the same shape of number.
 - **`lib/image.ts`** — one crop, shared by every round picture in the bar: the
   centred square a `Gtk.Image` needs before a `border-radius` can read as a
   circle.
@@ -301,6 +332,23 @@ the sources behind the waybar setup this replaces, plus the notification daemon.
   file ending in `-symbolic.svg`, which is why the SVGs cannot stay strings —
   hence the write-to-cache in `lib/icons.ts`. A search path is scanned for loose
   icons as well as for themes, so that flat directory needs no `index.theme`.
+  **`opacity` survives it on a `path` and is lost on a `<g>`.** That asymmetry
+  is the whole of it, and it cost a long detour: `fill` cannot reach `opacity`,
+  so a per-path `opacity="0.4"` comes through symbolic recolouring intact, but
+  the same 0.4 on a `<g>` wrapping those paths draws solid on the bar. Both
+  halves of the battery ramp were exported the second way and the casing came
+  out at full strength on every charging glyph. **rsvg honours group opacity**,
+  so every check made here — rendering the file raw, rendering it through GTK's
+  own CSS wrapper, measuring alpha plateaus — reported a correct 102 and hid the
+  bug completely; it was only visible on the running bar. So: put `opacity` on
+  the shape, never on a group, and do not trust `rsvg-convert` to tell you
+  whether a symbolic icon is right. The fix is to flatten the group's value onto
+  each child, which is exact only when the children are disjoint (they were —
+  verified at 0px overlap before flattening, wall still 102 after).
+  Two tones are worth having: at `$icon-idle`'s 0.7 the casing lands at 0.28 and
+  the level at 0.7, so the level matches every other glyph in the pill and the
+  frame sits under it. It also raises the legibility floor, since two tones
+  separate by value where one tone needs clear space.
 - **The icons are SF Symbols on a shared 24×24 viewBox, and `pixelSize` counts the
   box, not the glyph.** They were on 28×28 first, with each trimmed export centred
   by moving the viewBox, because the widest one (the logout arrow) measured 27.3
@@ -336,6 +384,26 @@ the sources behind the waybar setup this replaces, plus the notification daemon.
   why the empty cover tile draws it at 30 where the transport runs 16–22 and the
   bar 15. That leaves 13–18px of ink in the panel and 12px on the bar, the
   design's own proportion to the button each sits in.
+  The battery ramp is the set's most extreme wide-and-short glyph and so takes
+  its largest `pixelSize`: all ten measure 23.30×10.90, against the speaker
+  cone's 17.1 and the bell's 24.0. **Set it from the ink height, not the
+  width** — that is the whole difficulty with a glyph this flat. Matched on
+  width it comes to 22 and sits a third shorter than everything beside it,
+  which reads as the runt of the pill and was the user's first note on it. 26
+  draws 25.2×11.8px, putting the height on the speaker cone's 12.1 and the
+  sliders' 13.9 while staying inside the 30px box; 28 is the ceiling, past which
+  the casing reaches the box edge. (It sat at 24 while the glyph was one tone,
+  for a different reason — the 0.94 units between casing wall and level needed
+  every pixel to stay open, and closed into a blob at 17 and 20. The two-tone
+  export separates them by value instead, so legibility stopped being what sets
+  the size.) The ten are identical in extents, so the casing holds still and
+  only the level moves, and this export already centres them on 11.97,11.97 —
+  no transform, unlike the first pass, which came centred on 12,12.5.
+  One thing to know before reading the charging glyphs as wrong: the bolt
+  crosses the casing wall at full opacity with a knock-out gap either side, so
+  the frame reads heavier than the plain ramp's even though the wall is the same
+  0.4. Measured along the top wall, alpha is 102 for its whole length and 255
+  only in the single column the bolt passes through.
   Shuffle exported at 27×24 and is scaled into the shared canvas with a
   `<g transform>` rather than left wide, its ink centred on 12,12 (measured
   after). A `<g>` costs nothing in recolouring: GTK forces `fill` on the `path`s

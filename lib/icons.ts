@@ -3,6 +3,16 @@ import { readFile, writeFile } from "ags/file"
 import GLib from "gi://GLib"
 
 import back from "inline:../icons/struntuz-back-symbolic.svg"
+import battery0 from "inline:../icons/struntuz-battery-0-symbolic.svg"
+import battery25 from "inline:../icons/struntuz-battery-25-symbolic.svg"
+import battery50 from "inline:../icons/struntuz-battery-50-symbolic.svg"
+import battery75 from "inline:../icons/struntuz-battery-75-symbolic.svg"
+import battery100 from "inline:../icons/struntuz-battery-100-symbolic.svg"
+import battery0Charging from "inline:../icons/struntuz-battery-0-charging-symbolic.svg"
+import battery25Charging from "inline:../icons/struntuz-battery-25-charging-symbolic.svg"
+import battery50Charging from "inline:../icons/struntuz-battery-50-charging-symbolic.svg"
+import battery75Charging from "inline:../icons/struntuz-battery-75-charging-symbolic.svg"
+import battery100Charging from "inline:../icons/struntuz-battery-100-charging-symbolic.svg"
 import bell from "inline:../icons/struntuz-bell-symbolic.svg"
 import bellSlash from "inline:../icons/struntuz-bell-slash-symbolic.svg"
 import check from "inline:../icons/struntuz-check-symbolic.svg"
@@ -113,6 +123,42 @@ export const VolumeIcons = {
 
 export type VolumeWeight = keyof typeof VolumeIcons
 
+// The battery ramp: how full the casing is drawn is how much is left, the same
+// lever the volume ramp pulls, and the same two-ramp shape — except that what
+// picks the ramp here is the direction the level is moving, not the surface the
+// glyph sits on. The "outline in the panels, filled in the bar" rule has
+// nothing to choose between: SF Symbols ships no filled battery to pair with
+// the outline, because the casing already *is* the outline and the level inside
+// it already is the fill, so a battery in a panel would wear these same ten.
+//
+// The bolt is per level and not one glyph for all of charging. SF Symbols only
+// ships `battery.100percent.bolt`, which would collapse every charging state
+// into a full battery — rendered and looked at, all five drew identically, so a
+// battery charging at 5% read as one about to come off the charger. The bolt is
+// a second thing to say, and it does not get to cost the first.
+export const BatteryIcons = {
+  discharging: {
+    empty: "struntuz-battery-0-symbolic",
+    quarter: "struntuz-battery-25-symbolic",
+    half: "struntuz-battery-50-symbolic",
+    threeQuarters: "struntuz-battery-75-symbolic",
+    full: "struntuz-battery-100-symbolic",
+  },
+  charging: {
+    empty: "struntuz-battery-0-charging-symbolic",
+    quarter: "struntuz-battery-25-charging-symbolic",
+    half: "struntuz-battery-50-charging-symbolic",
+    threeQuarters: "struntuz-battery-75-charging-symbolic",
+    // The one SF Symbols ships as drawn: `battery.100percent.bolt`. It is also
+    // where a full battery with a bolt is literally true, which is what a
+    // machine sitting at FULLY_CHARGED wears.
+    full: "struntuz-battery-100-charging-symbolic",
+  },
+} as const
+
+// The ramp read low to high, so a step is an index rather than five branches.
+export const BATTERY_STEPS = ["empty", "quarter", "half", "threeQuarters", "full"] as const
+
 const SOURCES: Record<string, string> = {
   [Icons.back]: back,
   [Icons.forward]: forward,
@@ -133,6 +179,16 @@ const SOURCES: Record<string, string> = {
   [Icons.repeat]: repeat,
   [Icons.repeatOne]: repeatOne,
   [Icons.music]: music,
+  [BatteryIcons.discharging.empty]: battery0,
+  [BatteryIcons.discharging.quarter]: battery25,
+  [BatteryIcons.discharging.half]: battery50,
+  [BatteryIcons.discharging.threeQuarters]: battery75,
+  [BatteryIcons.discharging.full]: battery100,
+  [BatteryIcons.charging.empty]: battery0Charging,
+  [BatteryIcons.charging.quarter]: battery25Charging,
+  [BatteryIcons.charging.half]: battery50Charging,
+  [BatteryIcons.charging.threeQuarters]: battery75Charging,
+  [BatteryIcons.charging.full]: battery100Charging,
   [PlayIcons.outline.play]: play,
   [PlayIcons.outline.pause]: pause,
   [PlayIcons.fill.play]: playFill,

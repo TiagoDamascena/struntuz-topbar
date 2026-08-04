@@ -3,7 +3,7 @@ import { Astal, Gdk, Gtk } from "ags/gtk4"
 import { Accessor, createState, onCleanup } from "ags"
 import { idle, timeout, Timer } from "ags/time"
 import { Icons } from "../lib/icons"
-import { batteryStatus, userAvatar, userInitial, userName } from "../lib/session"
+import { userAvatar, userInitial, userName, userStatus } from "../lib/session"
 import { t } from "../lib/i18n"
 import AudioMenu from "./AudioMenu"
 import DoNotDisturb from "./DoNotDisturb"
@@ -55,7 +55,7 @@ function UserPill(props: { onPower: () => void }) {
       <Avatar />
       <box orientation={Gtk.Orientation.VERTICAL} valign={Gtk.Align.CENTER} hexpand>
         <label class="user-name" label={userName()} xalign={0} />
-        <label class="user-status" label={batteryStatus()} xalign={0} />
+        <label class="user-status" label={userStatus()} xalign={0} />
       </box>
       <button
         class="icon-button large"

@@ -32,6 +32,7 @@ export interface Config {
   toastTimeout: number
   toastLimit: number
   volumeStep: number
+  batteryLow: number
   powerCommands: PowerCommands
   nightLight: NightLight
 }
@@ -60,6 +61,11 @@ export const DEFAULTS: Config = {
   // How far a scroll or an arrow key moves the volume, in percent. The design's
   // own step, and the one every keyboard's volume keys take.
   volumeStep: 5,
+  // Below this, in percent, the battery on the bar stops being a readout and
+  // starts being a warning. Not upower's own 10: by the time a laptop is there
+  // the question is already whether it reaches the charger, and 20 is where it
+  // is still worth walking to one. Held to 1–100.
+  batteryLow: 20,
   powerCommands: {
     lock: "loginctl lock-session",
     suspend: "systemctl suspend",
@@ -134,6 +140,7 @@ function merge(raw: Record<string, unknown>): Config {
     toastTimeout: num(raw.toastTimeout, DEFAULTS.toastTimeout),
     toastLimit: num(raw.toastLimit, DEFAULTS.toastLimit),
     volumeStep: num(raw.volumeStep, DEFAULTS.volumeStep),
+    batteryLow: num(raw.batteryLow, DEFAULTS.batteryLow),
     powerCommands: powerCommands(raw.powerCommands),
     nightLight: nightLight(raw.nightLight),
   }

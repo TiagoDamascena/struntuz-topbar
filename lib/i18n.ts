@@ -59,6 +59,14 @@ export interface Strings {
   battery: string
   batteryLeft: string
   batteryCharging: string
+  // On AC with nothing left to put in, which upower reports as neither charging
+  // nor discharging.
+  batteryFull: string
+  // Follows an estimate, as `batteryLeft` does: "2h 10m until full".
+  batteryUntilFull: string
+  // Cable in and the level held — a charge threshold, which upower calls
+  // PENDING_CHARGE. Neither clock runs, so this stands in for an estimate.
+  batteryPlugged: string
   uptime: string
 
   power: string
@@ -126,6 +134,9 @@ const EN: Strings = {
   battery: "Battery",
   batteryLeft: "left",
   batteryCharging: "charging",
+  batteryFull: "full",
+  batteryUntilFull: "until full",
+  batteryPlugged: "plugged in",
   uptime: "Uptime",
 
   power: "Power",
@@ -191,6 +202,9 @@ const PT_BR: Partial<Strings> = {
   battery: "Bateria",
   batteryLeft: "restantes",
   batteryCharging: "carregando",
+  batteryFull: "carregada",
+  batteryUntilFull: "até encher",
+  batteryPlugged: "na tomada",
   uptime: "Ativo há",
 
   power: "Energia",

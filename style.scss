@@ -82,6 +82,13 @@ $ws-occupied: #a6adc8; // subtext0
 $ws-empty: #45475a; // surface1
 $ws-hover: #f5c2e7; // pink
 
+// The one warning in the bar, and the design has no token for it: "Desktop
+// Nocturne" never draws a battery running out. It comes from the same
+// Catppuccin ramp the dots above borrow rather than from a third source, and it
+// is peach and not red because what it marks is a walk to the charger, not a
+// machine about to stop.
+$warn: #fab387; // peach
+
 // No `backdrop-filter`, unlike the greeter: it blurs what is painted below it
 // *inside the same window*, and this one is transparent, so it has nothing to
 // work with.
@@ -302,6 +309,25 @@ $clock-size: 14px;
 .icon-button.open {
   background-color: rgba(145, 132, 217, 0.3);
   color: $accent-on;
+}
+
+// A glyph in the segments row that reads rather than clicks — the battery,
+// until there is a Power profile sub-panel for it to open. It takes
+// `.icon-button`'s box and none of its states: the same 30px keeps the row's
+// spacing and the concentricity with the pill's cap, so the day it grows a
+// click it changes class and nothing else moves.
+.segment-readout {
+  min-width: 30px;
+  min-height: 30px;
+  color: $icon-idle;
+  transition: color 150ms ease;
+}
+
+// Colour and not a glyph of its own, which is the lever the ramp deliberately
+// leaves free: five casings 25 apart are a picture of the level, and bending
+// one of them into a warning would cost the reading to buy the alarm.
+.segment-readout.low {
+  color: $warn;
 }
 
 // The pill around the round buttons, not the 18 the clock carries — a circle

@@ -128,6 +128,16 @@ in
             '';
           };
 
+          batteryLow = lib.mkOption {
+            type = lib.types.ints.unsigned;
+            default = 20;
+            description = ''
+              Below this, in percent, the battery on the bar stops being a
+              readout and starts being a warning. Only while it is discharging:
+              the same level with a cable in it is on its way up. Held to 1–100.
+            '';
+          };
+
           powerCommands = lib.mkOption {
             default = { };
             description = ''

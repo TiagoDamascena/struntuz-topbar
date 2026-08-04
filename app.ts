@@ -1,5 +1,6 @@
 import app from "ags/gtk4/app"
 import style from "./style.scss"
+import { warnIfUnreadable } from "./lib/battery"
 import { installIcons } from "./lib/icons"
 import { readNightLight } from "./lib/nightlight"
 import { startNotifications } from "./lib/notifications"
@@ -16,6 +17,8 @@ app.start({
     startNotifications()
     // The filter may well have been on since before the bar started.
     readNightLight()
+    // Nothing else says why a laptop came up without a battery on the bar.
+    warnIfUnreadable()
 
     for (const monitor of app.get_monitors()) {
       Bar(monitor)

@@ -41,6 +41,13 @@ NixOS the whole thing is one `enable = true`.
   it has an action instead; a right click always goes for the menu, a middle click
   for the application's secondary action. An icon asking for attention stops being
   dimmed.
+- **Battery** — a glyph in the same pill as the speaker, on a laptop: how full
+  the casing is drawn is how much is left, and a bolt rides that same level
+  while it charges rather than replacing it, so plugging in never costs you the
+  reading. The percentage and an estimate — time to empty, or time to full —
+  are in its tooltip. It turns amber under `batteryLow`, and only while
+  discharging: the same level with a cable in it is on its way up. A machine
+  without a battery never shows it, so the desktop bar is unchanged.
 - **Night light** — the tile beside it, warming the display through
   [hyprsunset](https://github.com/hyprwm/hyprsunset) by default. It runs
   commands, so any other filter does as well, and it reads the temperature back
@@ -60,6 +67,11 @@ default.
   and only says the command failed.
 - **PipeWire** with **WirePlumber**, for the volume bar. Without it the bar
   leaves the row out rather than showing one that cannot move.
+- **UPower**, on a laptop, for the battery. It is read through the daemon and
+  never from `/sys` directly, so without it running there is nothing to read and
+  the bar leaves the battery out — the same as on a desktop. It logs a line
+  saying so when the kernel can see a battery and UPower cannot. On NixOS:
+  `services.upower.enable = true`.
 - No other notification daemon running, since only one process can own
   `org.freedesktop.Notifications`.
 
@@ -147,6 +159,7 @@ programs.struntuz-topbar = {
     toastTimeout = 6800;
     toastLimit = 3;
     volumeStep = 5;
+    batteryLow = 20;
 
     powerCommands = {
       lock = "loginctl lock-session";
@@ -223,6 +236,7 @@ warns and uses the defaults.
   "toastTimeout": 6800,
   "toastLimit": 3,
   "volumeStep": 5,
+  "batteryLow": 20,
   "powerCommands": {
     "lock": "loginctl lock-session",
     "suspend": "systemctl suspend",
@@ -250,6 +264,7 @@ warns and uses the defaults.
 | `toastTimeout` | `6800` | How long a notification card stays up, in ms, when its sender asked for no timeout. |
 | `toastLimit` | `3` | How many cards stack up before the oldest leaves the screen. It stays in the list. |
 | `volumeStep` | `5` | How far a scroll or an arrow key moves the volume bar, in percent. Held to 1–100. |
+| `batteryLow` | `20` | Below this, in percent, the battery on the bar turns amber. Only while discharging. Held to 1–100. |
 | `powerCommands` | see above | One shell command per entry of the power menu, each overridable on its own. |
 | `nightLight` | see above | The blue light filter. `%d` in `on` and `off` is the temperature the command has to leave the display at: `temperature` turning on, `neutral` turning off. `status` prints where it is now, and is read against `neutral` — below it is on. |
 

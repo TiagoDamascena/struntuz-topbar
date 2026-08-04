@@ -1,9 +1,9 @@
-import { Accessor, createBinding, createComputed } from "ags"
+import { Accessor, createComputed } from "ags"
 import { Gdk } from "ags/gtk4"
 import { readFile } from "ags/file"
 import { createPoll } from "ags/time"
-import AstalBattery from "gi://AstalBattery"
 import GLib from "gi://GLib"
+import { batteryStatus, hhmm, percent, present } from "./battery"
 import { getConfig } from "./config"
 import { squareTexture } from "./image"
 import { t } from "./i18n"
@@ -40,34 +40,14 @@ export function userAvatar(size: number): Gdk.Texture | null {
   return squareTexture(path, size)
 }
 
-function hhmm(seconds: number): string {
-  const hours = Math.floor(seconds / 3600)
-  const minutes = Math.floor((seconds % 3600) / 60)
-  return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`
-}
-
-// Percentage first, then whatever the battery can say about the rest: an
-// estimate arrives late and reads as 0 until it does, so it is left out until
-// it means something.
-function batteryLine(present: boolean, percent: number, charging: boolean, secs: number): string {
-  if (!present) return `${GLib.get_user_name()}@${GLib.get_host_name()}`
-
-  const level = `${t.battery} ${Math.round(percent * 100)}%`
-  if (charging) return `${level} · ${t.batteryCharging}`
-  return secs > 0 ? `${level} · ${hhmm(secs)} ${t.batteryLeft}` : level
-}
-
-export function batteryStatus(): Accessor<string> {
-  const battery = AstalBattery.get_default()
-
-  return createComputed(
-    [
-      createBinding(battery, "isPresent"),
-      createBinding(battery, "percentage"),
-      createBinding(battery, "charging"),
-      createBinding(battery, "timeToEmpty"),
-    ],
-    batteryLine,
+// The line under the name in the control centre. The battery says it when there
+// is one — the same line the bar's own glyph carries in its tooltip, read from
+// `lib/battery.ts` rather than composed a second time — and a machine without
+// one falls back to who and where you are, which is the only other thing the
+// pill knows that the name above it does not already say.
+export function userStatus(): Accessor<string> {
+  return createComputed([present(), batteryStatus()], (has, line) =>
+    has ? line : `${GLib.get_user_name()}@${GLib.get_host_name()}`,
   )
 }
 
@@ -82,17 +62,11 @@ function uptimeSeconds(): number {
 }
 
 export function sessionStatus(): Accessor<string> {
-  const battery = AstalBattery.get_default()
-
   return createComputed(
-    [
-      createPoll(uptimeSeconds(), 60_000, uptimeSeconds),
-      createBinding(battery, "isPresent"),
-      createBinding(battery, "percentage"),
-    ],
-    (secs, present, percent) => {
+    [createPoll(uptimeSeconds(), 60_000, uptimeSeconds), present(), percent()],
+    (secs, has, level) => {
       const up = `${t.uptime} ${hhmm(secs)}`
-      return present ? `${up} · ${t.battery} ${Math.round(percent * 100)}%` : up
+      return has ? `${up} · ${t.battery} ${level}%` : up
     },
   )
 }
