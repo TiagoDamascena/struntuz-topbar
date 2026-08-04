@@ -35,7 +35,7 @@ function Row(speaker: Speaker) {
 
   return (
     <button
-      class={current.as((on) => (on ? "audio-row current" : "audio-row"))}
+      class={current.as((on) => (on ? "menu-row current" : "menu-row"))}
       onClicked={() => selectSpeaker(speaker)}
     >
       <box spacing={11}>
@@ -43,9 +43,9 @@ function Row(speaker: Speaker) {
             mute disc is 20: the cone is 17.1 units tall of the 24 its box
             counts, and it is the cone that has to line up down the column —
             what `high` adds reaches past it on both axes. */}
-        <image class="audio-row-icon" iconName={ICON} pixelSize={18} valign={Gtk.Align.CENTER} />
+        <image class="menu-row-icon" iconName={ICON} pixelSize={18} valign={Gtk.Align.CENTER} />
         <label
-          class="audio-row-name"
+          class="menu-row-name"
           label={speakerName(speaker)}
           xalign={0}
           hexpand
@@ -54,7 +54,7 @@ function Row(speaker: Speaker) {
           valign={Gtk.Align.CENTER}
         />
         <image
-          class="audio-row-check"
+          class="menu-row-check"
           iconName={Icons.check}
           pixelSize={15}
           valign={Gtk.Align.CENTER}

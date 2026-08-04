@@ -36,6 +36,13 @@ NixOS the whole thing is one `enable = true`.
   play sound and switches to the one you pick. The speaker on the bar itself
   says where the sound is going and opens that menu in one click, and its waves
   are how loud it is — none at 0%, three at the top, a slash when muted.
+- **Wi-Fi** — a tile across the control centre saying which network you are on,
+  with a disc that turns the radio on and off and a way into the list of
+  everything the card can hear: one row per network, strongest first, the one
+  you are on at the top. Picking an open or a saved network joins it on the
+  click; anything else asks for the password on a panel of its own and tells
+  you when it was the wrong one. The arcs on the bar's own glyph are how strong
+  the link is, and it opens the list in one click. See [Wi-Fi](#wi-fi) below.
 - **System tray** — a pill of application icons, hidden entirely while nothing is
   in it. A left click opens the application's own menu, or sends it the click when
   it has an action instead; a right click always goes for the menu, a middle click
@@ -72,6 +79,10 @@ default.
   the bar leaves the battery out — the same as on a desktop. It logs a line
   saying so when the kernel can see a battery and UPower cannot. On NixOS:
   `services.upower.enable = true`.
+- **NetworkManager**, for the Wi-Fi tile and its menu. It is the only backend —
+  a machine on `iwd` alone, `systemd-networkd` or `wpa_supplicant` by hand gets
+  no tile rather than a broken one. On NixOS: `networking.networkmanager.enable
+  = true`. A desktop with no wireless card leaves it out the same way.
 - No other notification daemon running, since only one process can own
   `org.freedesktop.Notifications`.
 
@@ -374,6 +385,54 @@ The menu is a tint like the panels are, so it wants that line the way they want
 theirs — without it you get the window behind it rather than a blur of it. Note
 that `decoration:blur:popups` is a different setting and will not do: that one
 governs the popups of ordinary windows, not of a layer surface.
+
+## Wi-Fi
+
+Everything here goes through **NetworkManager**, and what the bar can do is
+what a NetworkManager client can do. The tile's disc is the radio — the same
+thing `nmcli radio wifi off` does — and the list under it is the access points
+the card can currently hear.
+
+A network is joined by clicking its row. One that is **open**, or one you have
+**saved** before, connects straight away, since NetworkManager already holds
+everything it needs; anything else opens a password panel first. A profile is
+created on the first successful join and is used from then on, so a network is
+only asked about once.
+
+**A wrong password takes a few seconds to come back as one.** NetworkManager
+answers the moment it has *started* the association, not when it has worked, so
+the panel waits on the device afterwards and reports what it lands on. Thirty
+seconds without an answer either way is reported as a failure too.
+
+Two things are **not** here, and are left out rather than drawn and ignored:
+
+- **Hidden networks.** Joining one means describing a connection rather than
+  picking an access point — the SSID is typed in because nothing is
+  broadcasting it — and `AstalNetwork` only models access points. Networks
+  broadcasting an empty name are dropped from the list for the same reason.
+- **"Connect automatically."** NetworkManager sets `autoconnect` on a new
+  profile anyway, which is what the checkbox would be asking for, and there is
+  no binding to say otherwise. Change it with `nmcli connection modify <name>
+  connection.autoconnect no`.
+
+**One row per name.** NetworkManager lists an access point per radio, so a mesh
+or a dual-band router turns up two or five times over; the list keeps the
+strongest one carrying each name. Which also means a band is only pickable
+separately when the router names the two differently — `Savio` and `Savio_5G`
+are two networks, one router advertising both bands under one name is one row.
+
+**A saved network is never asked about again**, which cuts both ways: if its
+stored password stops being right — the router changed it — its row keeps
+connecting and failing, and there is nothing here to type a new one into.
+Forget it first and the row asks again:
+
+```bash
+nmcli connection delete "<name>"
+```
+
+Forgetting, renaming and everything else about a profile is `nmcli` or
+`nm-connection-editor`: the bar is a way onto a network, not a place to
+administer them.
 
 ## Media
 

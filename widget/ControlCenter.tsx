@@ -11,7 +11,11 @@ import NightLight from "./NightLight"
 import Notifications from "./Notifications"
 import PowerMenu from "./PowerMenu"
 import Volume from "./Volume"
+import Wifi from "./Wifi"
+import WifiJoin from "./WifiJoin"
+import WifiMenu from "./WifiMenu"
 import { readNightLight } from "../lib/nightlight"
+import { scan } from "../lib/network"
 import { PANEL_SIDE, PANEL_TOP } from "../lib/layout"
 
 // Where it hangs is the bar's, not this window's: measured from the top of the
@@ -78,7 +82,7 @@ function UserPill(props: { onPower: () => void }) {
 // slides one into the next — and the stack slides on the order they are added
 // in, so `main` has to be the first page for a sub-panel to come in from the
 // right and go back out to it.
-export type View = "main" | "power" | "audio"
+export type View = "main" | "power" | "audio" | "wifi" | "wifi-join"
 
 export default function ControlCenter(props: {
   gdkmonitor: Gdk.Monitor
@@ -118,6 +122,15 @@ export default function ControlCenter(props: {
         props.setView("main")
       })
     }
+  })
+
+  // A list of networks is only worth as much as the last time the card
+  // listened, so the scan is asked for on the way in — the point the night
+  // light is read back at, and for the same reason. The view is what carries
+  // it rather than the window: the panel opens straight onto this page from
+  // the bar, and it is also reached from the tile with the window already up.
+  props.view.subscribe(() => {
+    if (props.view.get() === "wifi") scan()
   })
 
   return (
@@ -196,7 +209,11 @@ export default function ControlCenter(props: {
               <UserPill onPower={() => props.setView("power")} />
               {/* The design's tile grid, between the user pill and the
                   notifications: two columns of equal width, which is what
-                  `homogeneous` gives whatever the labels measure. */}
+                  `homogeneous` gives whatever the labels measure — with the
+                  Wi-Fi tile spanning the row above them, since what it writes
+                  on its second line is a network name and it gives up a tile's
+                  width to the disc and the caret before that name starts. */}
+              <Wifi onOpen={() => props.setView("wifi")} />
               <box spacing={8} homogeneous>
                 <DoNotDisturb />
                 <NightLight />
@@ -207,6 +224,14 @@ export default function ControlCenter(props: {
                   output. */}
               <Notifications close={props.close} />
             </box>
+            {/* Before the audio menu, so joining a network is a step further
+                right than the list it comes off: a stack slides on the order
+                its pages were added in, and these two are one movement. */}
+            <WifiMenu
+              onBack={() => props.setView("main")}
+              onJoin={() => props.setView("wifi-join")}
+            />
+            <WifiJoin onBack={() => props.setView("wifi")} />
             <AudioMenu onBack={() => props.setView("main")} />
             <PowerMenu onBack={() => props.setView("main")} onRun={props.close} />
           </stack>

@@ -32,6 +32,31 @@ export interface Strings {
   // is none.
   audioTooltip: string
 
+  wifi: string
+  // The radio is off, against `wifiDisconnected` — on with nothing joined.
+  wifiOff: string
+  wifiDisconnected: string
+  wifiEnable: string
+  wifiDisable: string
+  // The bar segment's tooltip. `%s` is the network, or that there is none.
+  wifiTooltip: string
+  wifiScanning: string
+  wifiEmpty: string
+  // What a row says under its name.
+  wifiConnected: string
+  wifiSaved: string
+  wifiSecured: string
+  wifiOpenNetwork: string
+  wifiPassword: string
+  // `%d` is how many characters a WPA key takes at the least.
+  wifiPasswordHint: string
+  wifiConnect: string
+  wifiCancel: string
+  // `%s` is the network being joined, in all three.
+  wifiJoining: string
+  wifiWrongPassword: string
+  wifiFailed: string
+
   // The bar pill's tooltip. `%s` is what is playing, as "title · artist".
   mediaTooltipPlaying: string
   mediaTooltipPaused: string
@@ -109,6 +134,26 @@ const EN: Strings = {
   audioOutput: "Output device",
   audioTooltip: "Sound — %s",
 
+  wifi: "Wi-Fi",
+  wifiOff: "Off",
+  wifiDisconnected: "Not connected",
+  wifiEnable: "Turn Wi-Fi on",
+  wifiDisable: "Turn Wi-Fi off",
+  wifiTooltip: "Wi-Fi — %s",
+  wifiScanning: "Looking for networks",
+  wifiEmpty: "No networks nearby",
+  wifiConnected: "Connected",
+  wifiSaved: "Saved",
+  wifiSecured: "Secured",
+  wifiOpenNetwork: "Open network",
+  wifiPassword: "Password",
+  wifiPasswordHint: "At least %d characters",
+  wifiConnect: "Connect",
+  wifiCancel: "Cancel",
+  wifiJoining: "Connecting to %s",
+  wifiWrongPassword: "Wrong password for %s",
+  wifiFailed: "Could not connect to %s",
+
   mediaTooltipPlaying: "Playing — %s",
   mediaTooltipPaused: "Paused — %s",
   mediaUnknown: "Unknown track",
@@ -176,6 +221,26 @@ const PT_BR: Partial<Strings> = {
   audio: "Áudio",
   audioOutput: "Dispositivo de saída",
   audioTooltip: "Som — %s",
+
+  wifi: "Wi-Fi",
+  wifiOff: "Desligado",
+  wifiDisconnected: "Sem conexão",
+  wifiEnable: "Ligar o Wi-Fi",
+  wifiDisable: "Desligar o Wi-Fi",
+  wifiTooltip: "Wi-Fi — %s",
+  wifiScanning: "Procurando redes",
+  wifiEmpty: "Nenhuma rede por perto",
+  wifiConnected: "Conectado",
+  wifiSaved: "Salva",
+  wifiSecured: "Protegida",
+  wifiOpenNetwork: "Rede aberta",
+  wifiPassword: "Senha",
+  wifiPasswordHint: "No mínimo %d caracteres",
+  wifiConnect: "Conectar",
+  wifiCancel: "Cancelar",
+  wifiJoining: "Conectando a %s",
+  wifiWrongPassword: "Senha incorreta para %s",
+  wifiFailed: "Não foi possível conectar a %s",
 
   mediaTooltipPlaying: "Tocando — %s",
   mediaTooltipPaused: "Pausado — %s",

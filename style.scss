@@ -580,6 +580,71 @@ $clock-size: 14px;
   color: $accent-text;
 }
 
+// The design's tile in full: a disc that switches the thing, and beside it a
+// way into what the thing can be set to. The two tiles above are the half of it
+// that was needed — nothing hangs under do-not-disturb or the night light — so
+// this only splits where there is a sub-panel to open.
+//
+// The capsule is the same one; what changes is that it is a box now, and the
+// two halves are the buttons. Which is also why the hover moved: `.tile:hover`
+// still lights the whole capsule, since GTK4 sets the hover state on the widget
+// under the pointer *and* its ancestors (the volume bar's caret leans on the
+// same thing).
+.tile.split {
+  // The label side is a button of its own, so the type's inset is its padding
+  // rather than the tile's — the tile keeps only the disc's.
+  padding: 0 0 0 10px;
+}
+
+// Concentric with the capsule's cap: the tile is 56 plus its edge, so the arc
+// centre is 29 in, and 10 of padding puts a 36px disc's centre exactly on it.
+// The ring around it is the tile's height and nothing else (see `.slider-icon`).
+.tile-toggle {
+  @extend %bare-button;
+  min-width: 36px;
+  min-height: 36px;
+  border-radius: $pill;
+  background-color: rgba(233, 233, 237, 0.1);
+  color: $icon-idle;
+  transition:
+    background-color 150ms ease,
+    color 150ms ease,
+    box-shadow 120ms ease;
+}
+
+.tile.on .tile-toggle {
+  background-color: $accent;
+  // The panel's own dark on the accent, as on `.tile-icon`: a glyph filled with
+  // lit type would not hold against a surface that bright.
+  color: #161826;
+}
+
+// A ring and not a fill: the disc is already carrying a state, and a hover that
+// changed its colour would read as the state changing.
+.tile-toggle:hover {
+  box-shadow: 0 0 0 3px $hover;
+}
+
+.tile-open {
+  @extend %bare-button;
+  // The type's own inset on the right, where there is no round shape to line up
+  // with — the tile's old padding, now that the tile has none of its own.
+  padding: 0 12px 0 0;
+}
+
+// Only under the pointer, as `.slider-caret` is. It takes the tile's hover and
+// not its own: what it says is that the whole label side opens something, and a
+// caret that lit only over itself would read as a button beside the label.
+.tile-caret {
+  color: $text-faint;
+  opacity: 0;
+  transition: opacity 140ms ease;
+}
+
+.tile:hover .tile-caret {
+  opacity: 1;
+}
+
 // The volume bar. One capsule the width of the panel, filled to where the
 // volume is, with the type over the fill — so the bar is the control and the
 // label, not a label with a control under it.
@@ -741,10 +806,15 @@ $clock-size: 14px;
   @include rule;
 }
 
-// A device. Same rounded rectangle as a power row, and the one that is playing
-// is tinted rather than only ticked — the check says which, the tint says it
-// from across the panel.
-.audio-row {
+// A row in a sub-panel: an output device in the audio menu, a network in the
+// Wi-Fi one. Same rounded rectangle as a power row, and the one in use is
+// tinted rather than only ticked — the check says which, the tint says it from
+// across the panel.
+//
+// One class and not two, unlike the first pass at the audio rows: the design
+// builds both lists out of the same `subItem`, and the panel rules already
+// showed what happens to a shape written out twice.
+.menu-row {
   @extend %bare-button;
   min-height: 46px;
   padding: 0 10px;
@@ -753,35 +823,216 @@ $clock-size: 14px;
   transition: background-color 150ms ease;
 }
 
-.audio-row:hover {
+.menu-row:hover {
   background-color: $row-hover;
 }
 
-.audio-row.current {
+.menu-row.current {
   background-color: rgba(145, 132, 217, 0.16);
 }
 
-.audio-row.current:hover {
+.menu-row.current:hover {
   background-color: rgba(145, 132, 217, 0.26);
 }
 
 // A bare glyph, not a disc: the row already carries a tint of its own, and a
 // second shape under the icon would read as a button inside it.
-.audio-row-icon {
+.menu-row-icon {
   color: $text-dim;
 }
 
-.audio-row.current .audio-row-icon {
+.menu-row.current .menu-row-icon {
   color: $accent-text;
 }
 
-.audio-row-name {
+.menu-row-name {
   font-size: 14px;
   font-weight: 500;
 }
 
-.audio-row-check {
+// The second line, where a row has one. Same negative margin as the power rows'
+// meta: the gap Pango leaves between two labels comes back off so the pair
+// reads as one block.
+.menu-row-meta {
+  margin-top: -3px;
+  font-size: 12px;
+  font-weight: 400;
+  color: $text-faint;
+}
+
+.menu-row.current .menu-row-meta {
   color: $accent-text;
+}
+
+// A padlock on a secured network, under the value the meta line is set in: what
+// it marks is the ordinary case, so it has to be findable rather than read.
+.menu-row-lock {
+  color: $text-ghost;
+}
+
+.menu-row-check {
+  color: $accent-text;
+}
+
+// A list with nothing in it yet. The notifications' empty state at the width of
+// a sub-panel, and it holds the panel open at a height rather than collapsing
+// it — a panel that shrank to its head would read as having lost the list.
+.menu-empty {
+  min-height: 92px;
+  color: $text-ghost;
+  font-size: 14px;
+}
+
+// The radio's switch, in the Wi-Fi menu's head. The one control in this bar
+// that is a GTK widget drawn as GTK draws it rather than a shape of our own, so
+// what the theme brings has to come off first — the gradient on the track, the
+// shadow under the knob, the border it gives both.
+// The design's 52×30 with a 22 knob, brought down with everything else: at 42
+// the track is the width of two glyphs, which is where a switch stops reading
+// as a second pill in the head.
+.wifi-switch {
+  min-width: 42px;
+  min-height: 24px;
+  padding: 0;
+  border: 1px solid $pill-edge;
+  border-radius: $pill;
+  background-image: none;
+  background-color: rgba(233, 233, 237, 0.08);
+  box-shadow: none;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease;
+}
+
+.wifi-switch:checked {
+  border-color: rgba(145, 132, 217, 0.5);
+  background-color: rgba(145, 132, 217, 0.5);
+}
+
+// 2px inside the track at every point, which is what leaves the track reading
+// as one: a 20px disc in a 24px content box.
+.wifi-switch > slider {
+  min-width: 20px;
+  min-height: 20px;
+  margin: 2px;
+  border: 0;
+  border-radius: $pill;
+  background-image: none;
+  background-color: $icon-idle;
+  box-shadow: none;
+  transition: background-color 150ms ease;
+}
+
+.wifi-switch:checked > slider {
+  background-color: $accent-on;
+}
+
+// The password panel. The only place in the bar that takes typing, and so the
+// only place the theme's entry has to be brought into the panel's own set.
+.join {
+  padding: 4px 6px 6px;
+}
+
+.join-label {
+  font-size: 12px;
+  color: $text-dim;
+}
+
+// The design's 48px field brought down with the bar, less the edge GTK adds on
+// top of the content box. A well in a panel rather than a panel of its own, so
+// it lightens where a free-standing pill darkens — the same fill `.slider-pill.
+// inset` takes.
+.join-entry {
+  min-height: 38px;
+  padding: 0 12px;
+  border: 1px solid $pill-edge;
+  // Not the pill radius: the field is a shape in a panel, as a row is, and a
+  // capsule this wide would read as a second slider.
+  border-radius: 14px;
+  background-image: none;
+  background-color: rgba(233, 233, 237, 0.05);
+  color: $text;
+  font-size: 14px;
+  box-shadow: none;
+  outline: none;
+  transition: border-color 150ms ease;
+}
+
+.join-entry:focus-within {
+  border-color: rgba(145, 132, 217, 0.5);
+}
+
+// The peek button and the caps-lock warning, which are `Gtk.PasswordEntry`'s
+// own children and the one place a themed glyph lands inside a panel.
+.join-entry image {
+  color: $text-faint;
+}
+
+.join-hint {
+  font-size: 12px;
+  color: $text-faint;
+}
+
+// Peach and not red, the battery's warning colour: a password typed wrong is
+// something to do again, not something that has gone wrong with the machine.
+.join-hint.failed {
+  color: $warn;
+}
+
+.join-actions {
+  padding-top: 4px;
+}
+
+.join-spinner {
+  min-width: 16px;
+  min-height: 16px;
+  color: $accent-text;
+}
+
+.join-progress {
+  font-size: 13px;
+  color: $accent-text;
+}
+
+// The two buttons at the foot. Outlined and not filled, as the design draws
+// them: they sit on a panel that is already a surface, and a filled pair would
+// read as two more tiles.
+.join-action {
+  @extend %bare-button;
+  // Against the field's 38, which is the design's own ratio between the two
+  // (44 to 48) — at 32 the pair read as small print under a control.
+  min-height: 34px;
+  padding: 0 16px;
+  border: 1px solid $pill-edge;
+  border-radius: $pill;
+  color: $text-dim;
+  font-size: 14px;
+  font-weight: 500;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease;
+}
+
+.join-action:hover {
+  background-color: $row-hover;
+  color: $text;
+}
+
+.join-action.primary {
+  border-color: rgba(145, 132, 217, 0.5);
+  color: $accent-text;
+}
+
+.join-action.primary:hover {
+  background-color: rgba(145, 132, 217, 0.2);
+  color: $accent-on;
+}
+
+// A key too short to be a key: the button says so by going quiet rather than by
+// letting the attempt fail.
+.join-action:disabled {
+  opacity: 0.4;
 }
 
 // The media panel: the one that hangs off the left of the bar rather than the

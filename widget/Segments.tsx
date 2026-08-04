@@ -2,14 +2,16 @@ import { Gtk } from "ags/gtk4"
 import { Accessor, createComputed } from "ags"
 import { hasAudio, muted, outputName, volumeIcon } from "../lib/audio"
 import { batteryIcon, batteryStatus, isLow, present } from "../lib/battery"
+import { hasWifi, wifiIcon, wifiStatus } from "../lib/network"
 import { t } from "../lib/i18n"
 import type { View } from "./ControlCenter"
 
 // The design's segments: one round button per source the control centre has a
 // sub-panel for — audio, Wi-Fi, Bluetooth, battery — each opening the panel
-// straight onto its own. Audio and battery have a source in this bar; the
-// others join them here when they arrive. The capsule around them is
-// `widget/Controls.tsx`, which they share with the control-centre toggle.
+// straight onto its own, and in that order. Audio, Wi-Fi and battery have a
+// source in this bar; Bluetooth joins them here when it arrives. The capsule
+// around them is `widget/Controls.tsx`, which they share with the
+// control-centre toggle.
 //
 // Filled glyphs, unlike the panels' outlines: a bar pill is the smaller, busier
 // surface of the two.
@@ -35,6 +37,32 @@ function Audio(props: {
           22.2. At 17 it draws 12.1px tall, the same share of the 26px button
           that the sliders take at 15. */}
       <image iconName={volumeIcon("fill")} pixelSize={17} />
+    </button>
+  )
+}
+
+// Wi-Fi, whose glyph is the same ramp the tile's disc wears — how many arcs is
+// how strong, and the slash when there is nothing joined. The tooltip is what
+// carries the network's name: the segment is a 30px circle, and the design puts
+// no type in one.
+function Wifi(props: {
+  active: Accessor<boolean>
+  onToggle: () => void
+}) {
+  const status = wifiStatus()
+
+  return (
+    <button
+      class={props.active.as((open) => (open ? "icon-button open" : "icon-button"))}
+      tooltipText={status.as((where) => t.wifiTooltip.replace("%s", where.toLowerCase()))}
+      valign={Gtk.Align.CENTER}
+      onClicked={props.onToggle}
+    >
+      {/* 17, the speaker's number rather than the sliders' 15: both glyphs are
+          wide and short where the rest of the set fills its box in height. The
+          arcs measure 18.0 units of 24, so 17 draws them 12.75px tall — between
+          the battery's 11.8 and the sliders' 13.9, and on the speaker's 12.1. */}
+      <image iconName={wifiIcon()} pixelSize={17} />
     </button>
   )
 }
@@ -83,17 +111,31 @@ export default function Segments(props: {
     createComputed(() => props.open() && props.view() === view)
 
   const audio = showing("audio")
+  // The password panel is the Wi-Fi menu one step further in, so the segment
+  // stays lit across it: what it opened is still what is on screen.
+  const wifi = createComputed(
+    () => props.open() && (props.view() === "wifi" || props.view() === "wifi-join"),
+  )
 
   return (
     <box spacing={2} valign={Gtk.Align.CENTER}>
-      {/* Nothing to segment without a sound server. The pill stays either way
-          now that the toggle is in it, so what goes is only this. */}
+      {/* Nothing to segment without a sound server, and nothing without a
+          wireless card either. The pill stays either way now that the toggle is
+          in it, so what goes is only the segment. */}
       {hasAudio() ? (
         <Audio
           active={audio}
           // A second press on a lit segment closes the panel, as in the design:
           // the segment is the panel's own switch, not just a way in.
           onToggle={() => (audio.get() ? props.onClose() : props.onOpen("audio"))}
+        />
+      ) : (
+        <box visible={false} />
+      )}
+      {hasWifi() ? (
+        <Wifi
+          active={wifi}
+          onToggle={() => (wifi.get() ? props.onClose() : props.onOpen("wifi"))}
         />
       ) : (
         <box visible={false} />

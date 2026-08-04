@@ -45,6 +45,10 @@ import speakerSlash from "inline:../icons/struntuz-speaker-slash-symbolic.svg"
 import speakerSlashFill from "inline:../icons/struntuz-speaker-slash-fill-symbolic.svg"
 import trackNext from "inline:../icons/struntuz-track-next-symbolic.svg"
 import trackPrevious from "inline:../icons/struntuz-track-previous-symbolic.svg"
+import wifiHigh from "inline:../icons/struntuz-wifi-high-symbolic.svg"
+import wifiLow from "inline:../icons/struntuz-wifi-low-symbolic.svg"
+import wifiMedium from "inline:../icons/struntuz-wifi-medium-symbolic.svg"
+import wifiSlash from "inline:../icons/struntuz-wifi-slash-symbolic.svg"
 
 // Names, not paths: everything downstream asks the icon theme, so a widget never
 // knows whether the icon shipped with the bar or came from the user's theme.
@@ -159,6 +163,27 @@ export const BatteryIcons = {
 // The ramp read low to high, so a step is an index rather than five branches.
 export const BATTERY_STEPS = ["empty", "quarter", "half", "threeQuarters", "full"] as const
 
+// The Wi-Fi ramp: how many arcs is how strong, the lever the volume ramp pulls.
+// Two tones like the battery's, and for the same reason — the arcs that are not
+// reached sit at the casing's opacity rather than going away, so the glyph holds
+// its shape from step to step and only the fill moves.
+//
+// One set and not two, unlike the volume ramp: the "outline in the panels,
+// filled in the bar" rule has nothing to choose between here, since SF Symbols
+// ships no `wifi.fill` — the arcs already are the fill.
+//
+// And one export split three ways rather than three exports: SF Symbols has no
+// strength variants of `wifi` either, only Variable Color, which is a rendering
+// of the one symbol. Its path holds the three arcs as three disjoint subpaths
+// (verified at 0px overlap), so the steps are that split with `opacity` on
+// whichever arcs are not reached — on the shapes, never on a group.
+export const WifiIcons = {
+  off: "struntuz-wifi-slash-symbolic",
+  low: "struntuz-wifi-low-symbolic",
+  medium: "struntuz-wifi-medium-symbolic",
+  high: "struntuz-wifi-high-symbolic",
+} as const
+
 const SOURCES: Record<string, string> = {
   [Icons.back]: back,
   [Icons.forward]: forward,
@@ -205,6 +230,10 @@ const SOURCES: Record<string, string> = {
   [VolumeIcons.fill.medium]: speakerMediumFill,
   [VolumeIcons.fill.high]: speakerHighFill,
   [VolumeIcons.fill.muted]: speakerSlashFill,
+  [WifiIcons.off]: wifiSlash,
+  [WifiIcons.low]: wifiLow,
+  [WifiIcons.medium]: wifiMedium,
+  [WifiIcons.high]: wifiHigh,
 }
 
 // GTK only recolours an icon it loaded itself, from a file whose name ends in

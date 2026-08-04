@@ -201,6 +201,56 @@ greeter.
   `userStatus` is this module's line with a `user@host` fallback for a machine
   without one, and both take `hhmm` from here, since an uptime and a
   time-to-empty are the same shape of number.
+- **`lib/network.ts`** — what the machine is on, over `AstalNetwork`, which is
+  NetworkManager and only NetworkManager. Nullable like `lib/audio.ts` and for
+  two reasons at once: astal builds an `NM.Client` in its constructor, so a
+  machine without the daemon throws rather than answering, and a machine with
+  no wireless card answers a null `wifi`. Both come out of `hasWifi()` as one
+  thing, which is all a widget needs. It holds no access point, for the reason
+  `lib/audio.ts` holds no endpoint. What it does hold is the *radio* and the
+  *link* as two separate readings: `enabled` is the switch, `networkName` is
+  ACTIVATED and nothing else — `ssid` alone follows the device through every
+  state it passes through, so it still reads the old network while one is being
+  left. Hence three readings and not two: off, on with nothing joined, and on a
+  network. The ramp steps on thirds like `volumeIcon`, and the slash covers
+  both the states with no link, since what the arcs report is a connection and
+  how good it is; `wifi.exclamationmark` is the export that would separate
+  them. **`rank` dedupes by SSID**, keeping the strongest radio per name: NM
+  lists an access point per BSSID, so a mesh or a dual-band router is in the
+  list five times. It sorts on the list and never on the strengths behind it —
+  a strength moves every few seconds and a self-sorting list walks rows out
+  from under the pointer — so a row binds its own strength for its glyph, the
+  way `lib/tray.ts` binds a status per item. `isActive` compares by name and
+  not by object for the same reason: the row's radio is not always the one NM
+  negotiated with.
+  The join is the part with no shortcut. **astal's `activate` answers when NM
+  has started the association, not when it has worked** —
+  `add_and_activate_connection_async` hands back the connection object and the
+  handshake happens after it — so a wrong password resolves exactly like a right
+  one and `settle` watches the device's state instead. Only ACTIVATED (on the
+  ssid that was asked for), NEED_AUTH and FAILED end the wait: DISCONNECTED is
+  on the way, since that is where a machine leaving one network passes through
+  on its way to the next, and reading it as a failure fails every switch between
+  two networks. A password is passed only for a network NM does not already
+  know — `activate` uses a saved profile and never reads the argument, so
+  passing one would look like it was being checked.
+  Two of the design's own controls are left out rather than faked, as the media
+  panel's queue is: a hidden network is a connection described rather than an
+  access point picked, which is not something `AstalNetwork` models (hence the
+  empty-ssid filter in `rank`), and "connect automatically" is what NM does to a
+  new profile anyway with no binding to say otherwise.
+  `widget/Wifi.tsx` is the tile, `widget/WifiMenu.tsx` the list and
+  `widget/WifiJoin.tsx` the password panel — two pages of the control centre's
+  stack and not a window, so joining is one step further right than the list it
+  came off. The tile is the first **split** one: the design draws every tile as
+  a disc that switches the thing beside a way into what it can be set to, and
+  do-not-disturb and the night light are the half of that which was needed. It
+  spans the row rather than sharing it, because what it writes on its second
+  line is a network name and the disc and the caret take a tile's width off
+  before that name starts. The password field is the one place in the bar that
+  takes typing, and `Gtk.PasswordEntry`'s peek glyph is the one themed icon
+  inside a panel — inside the field rather than in a row beside the bar's own
+  set, which is what makes it worth two exports not spent.
 - **`lib/image.ts`** — one crop, shared by every round picture in the bar: the
   centred square a `Gtk.Image` needs before a `border-radius` can read as a
   circle.
@@ -260,6 +310,11 @@ design's own 1.1s keyframe, which is why the cycle comes to 1.02s and the phase
 between two bars is its .25s stagger. The timer runs only while something is
 playing, which is what `animation-play-state: paused` says there — and the
 duration is written twice, in the widget and in `.eq-bar`'s transition.
+
+A row in a sub-panel is `.menu-row` and not `.audio-row` any more: the design
+builds the output devices and the networks out of one `subItem`, and the second
+list was about to be the second copy of the same shape — which is exactly how
+the panel rules drifted before they were one `@mixin rule`.
 
 `flake.nix`'s `astalLibsFor` is the single list of Astal libraries, feeding both
 the package build and the dev shell. It currently carries `io`, `astal4`,
@@ -404,6 +459,33 @@ the sources behind the waybar setup this replaces, plus the notification daemon.
   the frame reads heavier than the plain ramp's even though the wall is the same
   0.4. Measured along the top wall, alpha is 102 for its whole length and 255
   only in the single column the bolt passes through.
+  The Wi-Fi ramp is **one export split, not four**, which is the only glyph in
+  the set made this way and worth knowing before trying to re-export it. SF
+  Symbols ships `wifi` and `wifi.slash` and no strength variants at all — the
+  levels are Variable Color, which is a rendering of the one symbol and not
+  separate symbols. `wifi`'s single `<path>` holds exactly three subpaths (outer
+  arc, middle arc, dot, in that order), so the three steps are that path split
+  on its top-level `M`s and reassembled with `opacity="0.4"` on whichever arcs
+  are not reached. **Verified disjoint before splitting** — 0px overlap between
+  all three pairs at 20× — which is what makes per-path opacity exact, the same
+  check the battery's flattening needed. Rendered, low and medium come out at
+  plateaus of 102 and 255 with no third value, so nothing is double-darkened.
+  All three steps measure 24.00×18.00 centred on 12,12: the arcs hold still and
+  only the tone moves, as the volume ramp's cone does.
+  `wifi.slash` exports at 25×24 with 24.208 of ink centred on (12.104, 10.5), so
+  it is scaled by 24/24.208 and recentred — baked into the coordinates rather
+  than left as a `<g transform>`, which is what re-exporting to fit would have
+  done and is the better of the two (see repeat, below). It comes to
+  24.00×19.83, taller than the ramp because the slash runs past the arcs; the
+  volume set has the same asymmetry the other way round.
+  `pixelSize` off the 18.0 ink height, so ink = 0.75 × the number: 17 on the bar
+  (12.75px, on the speaker's 12.1 and between the battery's 11.8 and the
+  sliders' 13.9), 17 in the rows and the heads (12.75 against the audio rows'
+  12.8), and 20 in the tile's disc. That last one is the exception to matching
+  on height: the arcs fill *all* 24 units across where the bell fills 22.0, so
+  matching the bell's 18px of height would take it to `pixelSize` 24 and leave
+  6px a side in a 36px disc. At 20 it draws 20×15 with 8px a side, against the
+  bell's 9.75.
   Shuffle exported at 27×24 and is scaled into the shared canvas with a
   `<g transform>` rather than left wide, its ink centred on 12,12 (measured
   after). A `<g>` costs nothing in recolouring: GTK forces `fill` on the `path`s
@@ -414,6 +496,60 @@ the sources behind the waybar setup this replaces, plus the notification daemon.
   17.1 in the first three because it is the *same* cone at the same place on the
   shared canvas, so the ramp gains waves without the speaker moving or resizing.
   Only `high` breaks it, its outer wave reaching past the cone on both axes.
+- **`AstalNetwork.AccessPoint.get_connections()` corrupts NetworkManager's
+  memory and kills the bar. Never call it from JS.** Astal declares it returning
+  a Vala `GenericArray<NM.RemoteConnection>`, which introspects as *transfer
+  full*, while the `nm_access_point_filter_connections` behind it is documented
+  `(transfer container)` — the array borrows the client's profiles. So every
+  call from GJS unrefs each matching profile once too often, and once a refcount
+  reaches zero NetworkManager's own list holds freed objects: the next call
+  walks them and segfaults in `g_type_check_instance_is_a`, under
+  `nm_access_point_connection_valid` (read off the core dump —
+  `coredumpctl info` gives the trace without a debugger). The
+  `nm-access-point.c:287` criticals that come first are the same profiles, and
+  they are the warning that the process is already doomed: it dies seconds to
+  minutes later, on whatever churns the list next — a click to join, the radio
+  being toggled, a scan finishing. It was reproducible in under five seconds
+  with the menu open. `activate()` calls it too, but *in Vala*, where the return
+  is never marshalled, so that one is safe. Whether a network is saved comes
+  from `Network.client.connections` instead, which is annotated correctly —
+  matched on each profile's **SSID and not its id**, since NetworkManager
+  suffixes a duplicate name and the profile called "Maria 1" is the one for the
+  network called "Maria".
+  The general lesson is wider than this one call: astal's network bindings hand
+  out live `NM` objects, and an annotation that lies is invisible until it is a
+  segfault. Prefer astal's own cached scalars (`Wifi.ssid`, `Wifi.state`) over
+  reaching through to the objects behind them.
+- **Astal's `AccessPoint.activate` is a Vala `async` method, and GJS does not
+  promisify it.** The generated types advertise `activate(password):
+  Promise<void>`; calling that throws "At least 2 arguments required, but only 1
+  passed" — it is the callback form with its callback missing, and it fails
+  before anything reaches NetworkManager. Drive it by hand with
+  `activate(password, cb)` plus `activate_finish(result)` in a try/catch, which
+  is where the error surfaces. Assume the same for any other astal `async`.
+  Its `password` argument is also **not ignored on a saved profile**: astal
+  writes it in as the new psk and commits it, so passing one for a network that
+  already works overwrites a good stored secret. Hence null for anything
+  `isKnown`, and hence no way to retype a password without forgetting the
+  profile first.
+- **Nothing outside `lib/network.ts` holds an access point.** The module hands
+  out a plain `Network` record, and a click resolves the bssid back to a live
+  object at the moment of use. Astal's wrapper delegates every property straight
+  to the `NM.AccessPoint` with no liveness check (`accesspoint.vala`), and
+  `ssid` in particular calls `.get_data()` on what the failed assertion handed
+  back — so a read through a stale wrapper is a null dereference. Astal keys its
+  table by *BSSID*, so a network whose strongest radio changes is a remove and
+  an add, and a `For` keyed by SSID would keep a row — and its bindings — on the
+  wrapper that went away. Same rule as `lib/audio.ts` with endpoints and
+  `lib/mpris.ts` with players, for the same reason each time.
+- **A `Gtk.Switch` is the one theme widget in the bar, and everything the theme
+  draws has to come off it.** `.wifi-switch` resets the track's gradient, its
+  border and the shadow under the knob; the knob is `switch > slider`, a direct
+  CSS child node, sized 2px inside the track at every point (20 in a 24 content
+  box) so the track still reads as a track. `notify::active` fires for a
+  programmatic move as much as for a click — the trap `change-value` avoids on
+  the volume bar — so the write back is guarded on the switch and the source
+  disagreeing.
 - **Outline in the panels, fill in the bar.** The user's rule: everything in the
   control centre is an outline variant (`bell`, `moon.stars`, `switch.2`), and a
   symbol that lands in the bar itself takes the filled one. A symbol needed in
