@@ -239,12 +239,39 @@ window.background {
 // hierarchy anyway, which the weight and the opacity below do on their own.
 $clock-size: 14px;
 
+// A capsule of its own rather than a `.pill`, for the reason `.media` is one:
+// it is a button now — it opens the calendar — and `%bare-button` is declared
+// after `.pill` in this file, so extending it would take the fill and the edge
+// back off again.
 .clock {
+  @extend %bare-button;
+  min-height: $pill-height - 2px;
+  // Nothing round inside, so neither end is held to a cap's arc centre.
   padding: 0 18px;
+  border: 1px solid $pill-edge;
+  border-radius: $pill;
+  background-color: $pill-bg;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease;
+}
+
+.clock:hover {
+  background-color: rgba(22, 24, 38, 0.5);
+}
+
+// Held open, not hovered, like the media pill and the control-centre toggle.
+.clock.open {
+  border-color: rgba(145, 132, 217, 0.5);
+  background-color: rgba(145, 132, 217, 0.26);
 }
 
 .clock-date {
   font-size: $clock-size;
+  // Said here because the theme's own weight for anything clickable is bold and
+  // everything inside a GTK button inherits it (see `%bare-button`) — which the
+  // date started taking the day the pill became one.
+  font-weight: 400;
   color: $text-dim;
 }
 
@@ -994,12 +1021,17 @@ $clock-size: 14px;
   color: $accent-text;
 }
 
-// The two buttons at the foot. Outlined and not filled, as the design draws
-// them: they sit on a panel that is already a surface, and a filled pair would
-// read as two more tiles.
-.join-action {
+// The outlined button. Outlined and not filled, as the design draws it: it sits
+// on a panel that is already a surface, and a filled one would read as another
+// tile.
+//
+// `.panel-action` and not `.join-action` any more: the join panel's pair was the
+// first of these and the calendar's Today is the second, which is the point the
+// audio rows became `.menu-row` at. A shape written out twice is how the panel
+// rules drifted.
+.panel-action {
   @extend %bare-button;
-  // Against the field's 38, which is the design's own ratio between the two
+  // Against the join field's 38, which is the design's own ratio between the two
   // (44 to 48) — at 32 the pair read as small print under a control.
   min-height: 34px;
   padding: 0 16px;
@@ -1014,24 +1046,32 @@ $clock-size: 14px;
     color 150ms ease;
 }
 
-.join-action:hover {
+// In a head rather than at the foot of a panel: it stands beside a 15px month
+// name and two 30px arrows, not on a row of its own.
+.panel-action.small {
+  min-height: 26px;
+  padding: 0 12px;
+  font-size: 12px;
+}
+
+.panel-action:hover {
   background-color: $row-hover;
   color: $text;
 }
 
-.join-action.primary {
+.panel-action.primary {
   border-color: rgba(145, 132, 217, 0.5);
   color: $accent-text;
 }
 
-.join-action.primary:hover {
+.panel-action.primary:hover {
   background-color: rgba(145, 132, 217, 0.2);
   color: $accent-on;
 }
 
-// A key too short to be a key: the button says so by going quiet rather than by
-// letting the attempt fail.
-.join-action:disabled {
+// A key too short to be a key, or a month that is already the one on show: the
+// button says so by going quiet rather than by letting the click do nothing.
+.panel-action:disabled {
   opacity: 0.4;
 }
 
@@ -1269,6 +1309,79 @@ $clock-size: 14px;
 // thing in the panel, so there is nothing left to light it up with.
 .media-play:hover {
   box-shadow: 0 0 0 4px rgba(145, 132, 217, 0.4);
+}
+
+// The calendar: the panel that hangs under the clock rather than off either end
+// of the bar. The design's 16/18 padding brought down with everything else.
+.calendar {
+  padding: 14px 16px 16px;
+}
+
+// The head's own inset, on top of the panel's: the month name starts over the
+// grid's first column rather than over the panel's edge.
+.calendar-head {
+  padding: 0 4px 10px;
+}
+
+.calendar-month {
+  font-size: 15px;
+  font-weight: 500;
+}
+
+// Set back from the month rather than under it: the year is what the month is
+// in, and at this size a second line would be a second thing to read.
+.calendar-year {
+  font-size: 15px;
+  color: $text-faint;
+}
+
+// The design's 6px between the names and the grid, less the 4 the rows are
+// spaced by.
+.calendar-weekdays {
+  padding-bottom: 2px;
+}
+
+// Uppercased in the widget, since GTK's CSS has no `text-transform`. Below the
+// faint, like a timestamp: the row is a key to the grid and is meant to be read
+// only when looked for.
+.calendar-weekday {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  color: rgba(233, 233, 237, 0.35);
+}
+
+// A day. The design's 50px cell and 16px radius at the bar's own step down,
+// which is what puts a 384px panel's seven columns at 47 wide — the design's
+// ratio between a cell's two sides.
+//
+// The edge is transparent rather than absent: today's cell carries one, and GTK
+// adds a border on top of the content box (see `.pill`), so a cell without it
+// would stand 2px shorter than the one beside it.
+.calendar-day {
+  min-height: 42px;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  font-size: 13px;
+  color: $text-dim;
+}
+
+// The days either side of the month on show. Drawn rather than left blank — a
+// week is seven days wherever it falls — and set below the faint, so the month
+// reads as a shape without the grid growing holes.
+.calendar-day.outside {
+  color: $text-ghost;
+}
+
+// The one marked cell, and the only accent surface in this panel: with no
+// events to pick a day for, today is the whole of what the grid has to say. The
+// panel's own dark on the accent, as on `.badge` and `.media-play` — lit type
+// would not hold against a surface that bright.
+.calendar-day.today {
+  border-color: rgba(145, 132, 217, 0.5);
+  background-color: $accent;
+  color: #161826;
+  font-weight: 500;
 }
 
 // The disc every notification wears, in the list and on a toast. It is the

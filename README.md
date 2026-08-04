@@ -10,7 +10,12 @@ NixOS the whole thing is one `enable = true`.
 ## Features
 
 - **Workspaces** — a dot per workspace, the focused one stretched into a bar.
-- **Clock** — time and date, with configurable formats and localized names.
+- **Clock** — time and date, with configurable formats and localized names. It
+  opens a calendar under itself: one month at a time, today marked, and arrows to
+  page through the year with a Today to come back. The days either side of the
+  month are drawn rather than left blank, and which day a week starts on follows
+  the language unless `weekStart` says otherwise. No events yet — the grid is a
+  calendar to read, not one to keep.
 - **Control centre** — a panel with the user's avatar, name and battery, and a
   power menu: lock, suspend, log out, restart, shut down.
 - **Media** — a pill beside the workspaces showing what is playing, with three
@@ -242,6 +247,7 @@ warns and uses the defaults.
   "language": "",
   "dateFormat": "",
   "clockFormat": "%H:%M",
+  "weekStart": "",
   "userName": "",
   "userAvatar": "",
   "toastTimeout": 6800,
@@ -270,6 +276,7 @@ warns and uses the defaults.
 | `language` | `""` | `en`, `pt-BR`, or empty to follow the session's locale. |
 | `dateFormat` | `""` | Date beside the clock, as accepted by `g_date_time_format`. Empty uses the language's own pattern. |
 | `clockFormat` | `"%H:%M"` | Time, same format strings. |
+| `weekStart` | `""` | Day the calendar's first column is — `"sunday"` through `"saturday"`. Empty uses the language's, which is Sunday for both. |
 | `userName` | `""` | Name on the user pill. Empty uses the account's. |
 | `userAvatar` | `""` | Picture on the avatar; `~/` is expanded. Empty uses `~/.face`, and no file at all falls back to the name's initial. |
 | `toastTimeout` | `6800` | How long a notification card stays up, in ms, when its sender asked for no timeout. |
@@ -317,13 +324,14 @@ blur itself — its windows are transparent, so there is nothing beneath them fo
 GTK to blur. **Blurring is your compositor's job, and configuring it is up to
 you.** Without it everything still renders, just flat over the wallpaper.
 
-The bar puts its four windows on layer namespaces you can match against:
+The bar puts its five windows on layer namespaces you can match against:
 
 | Namespace | Window |
 | --- | --- |
 | `struntuz-topbar` | the bar itself |
 | `struntuz-control-center` | the control centre panel |
 | `struntuz-media` | the media panel |
+| `struntuz-calendar` | the calendar under the clock |
 | `struntuz-toasts` | the notification cards |
 
 On Hyprland, one `layerrule` per namespace in `hyprland.conf`:
@@ -348,6 +356,13 @@ layerrule {
   blur=on
   ignore_alpha=0
   match:namespace=struntuz-media
+}
+
+layerrule {
+  name=struntuz-calendar-blur
+  blur=on
+  ignore_alpha=0
+  match:namespace=struntuz-calendar
 }
 
 layerrule {

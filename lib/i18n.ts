@@ -7,6 +7,17 @@ export interface Strings {
   // overrides it.
   dateFormat: string
 
+  // Which day the calendar's first column is, 0 = Sunday … 6 = Saturday. It is
+  // the language's for the same reason `dateFormat` is: the locale translates
+  // the weekday names and never says which of them a week starts on.
+  // `config.weekStart` overrides it.
+  weekStart: number
+
+  calendar: string
+  calendarToday: string
+  calendarPreviousMonth: string
+  calendarNextMonth: string
+
   controlCenter: string
   back: string
 
@@ -113,6 +124,13 @@ export interface Strings {
 const EN: Strings = {
   dateFormat: "%a, %b %-d",
 
+  weekStart: 0,
+
+  calendar: "Calendar",
+  calendarToday: "Today",
+  calendarPreviousMonth: "Previous month",
+  calendarNextMonth: "Next month",
+
   controlCenter: "Control Center",
   back: "Back",
 
@@ -200,6 +218,16 @@ const EN: Strings = {
 
 const PT_BR: Partial<Strings> = {
   dateFormat: "%a, %-d de %b",
+
+  // Brazil's week starts on Sunday, as English's does. It is written out rather
+  // than left to the fallback because it is a fact about the language and not
+  // an untranslated string.
+  weekStart: 0,
+
+  calendar: "Calendário",
+  calendarToday: "Hoje",
+  calendarPreviousMonth: "Mês anterior",
+  calendarNextMonth: "Próximo mês",
 
   controlCenter: "Central de controle",
   back: "Voltar",

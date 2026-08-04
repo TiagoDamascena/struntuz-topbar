@@ -154,10 +154,10 @@ export default function WifiJoin(props: { onBack: () => void }) {
             visible={busy.as((waiting) => !waiting)}
             hexpand
           >
-            <button class="join-action" onClicked={endJoin}>
+            <button class="panel-action" onClicked={endJoin}>
               <label label={t.wifiCancel} />
             </button>
-            <button class="join-action primary" sensitive={ready} onClicked={submit}>
+            <button class="panel-action primary" sensitive={ready} onClicked={submit}>
               <label label={t.wifiConnect} />
             </button>
           </box>

@@ -79,6 +79,28 @@ in
             description = "Time on the clock, same format strings.";
           };
 
+          weekStart = lib.mkOption {
+            type = lib.types.enum [
+              ""
+              "sunday"
+              "monday"
+              "tuesday"
+              "wednesday"
+              "thursday"
+              "friday"
+              "saturday"
+            ];
+            default = "";
+            example = "monday";
+            description = ''
+              Day the calendar's first column is. Empty takes the one `language`
+              carries, since the locale translates the weekday names but never
+              says which of them a week starts on: Sunday for English and pt-BR.
+              A name and not a number, because a `1` in a config file says
+              nothing about which day it is.
+            '';
+          };
+
           userName = lib.mkOption {
             type = lib.types.str;
             default = "";

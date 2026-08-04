@@ -27,6 +27,7 @@ export interface Config {
   language: string
   dateFormat: string
   clockFormat: string
+  weekStart: string
   userName: string
   userAvatar: string
   toastTimeout: number
@@ -48,6 +49,10 @@ export const DEFAULTS: Config = {
   // Empty: the language's own pattern (lib/i18n.ts) unless overridden here.
   dateFormat: "",
   clockFormat: "%H:%M",
+  // The calendar's first column, as a day name — "sunday" through "saturday".
+  // Empty: the one the language carries (lib/i18n.ts). A name and not a number,
+  // since a `1` in a config file says nothing about which day it is.
+  weekStart: "",
   // Empty: the account's own name (lib/session.ts).
   userName: "",
   // Empty: `~/.face`, where the desktop conventionally keeps the picture. A
@@ -135,6 +140,9 @@ function merge(raw: Record<string, unknown>): Config {
     language: str(raw.language, DEFAULTS.language),
     dateFormat: str(raw.dateFormat, DEFAULTS.dateFormat),
     clockFormat: str(raw.clockFormat, DEFAULTS.clockFormat),
+    // Checked against the day names in lib/calendar.ts, which warns on one it
+    // does not know.
+    weekStart: str(raw.weekStart, DEFAULTS.weekStart),
     userName: str(raw.userName, DEFAULTS.userName),
     userAvatar: str(raw.userAvatar, DEFAULTS.userAvatar),
     toastTimeout: num(raw.toastTimeout, DEFAULTS.toastTimeout),

@@ -1,6 +1,7 @@
 import app from "ags/gtk4/app"
 import { Astal, Gtk, Gdk } from "ags/gtk4"
 import { createComputed, createState } from "ags"
+import Calendar from "./Calendar"
 import Clock from "./Clock"
 import ControlCenter, { type View } from "./ControlCenter"
 import Controls from "./Controls"
@@ -22,14 +23,17 @@ export default function Bar(gdkmonitor: Gdk.Monitor) {
   // sub-panel it stands for and lights up while that one is showing.
   const [view, setView] = createState<View>("main")
 
-  // The media panel, on the other end of the bar. Two of them are never up at
-  // once: each is a window over the whole output with a click-away scrim, so
-  // the second one to open would be catching the first one's dismissals. The
-  // design closes them against each other for the same reason.
+  // The media panel, on the other end of the bar, and the calendar under the
+  // clock. No two of the three are ever up at once: each is a window over the
+  // whole output with a click-away scrim, so the second one to open would be
+  // catching the first one's dismissals. The design closes them against each
+  // other for the same reason.
   const [media, setMedia] = createState(false)
+  const [calendar, setCalendar] = createState(false)
 
   function show(next: View) {
     setMedia(false)
+    setCalendar(false)
     setView(next)
     setOpen(true)
   }
@@ -42,6 +46,7 @@ export default function Bar(gdkmonitor: Gdk.Monitor) {
 
   function showMedia() {
     setOpen(false)
+    setCalendar(false)
     setMedia(true)
   }
 
@@ -49,8 +54,19 @@ export default function Bar(gdkmonitor: Gdk.Monitor) {
     setMedia(false)
   }
 
+  function showCalendar() {
+    setOpen(false)
+    setMedia(false)
+    setCalendar(true)
+  }
+
+  function hideCalendar() {
+    setCalendar(false)
+  }
+
   ControlCenter({ gdkmonitor, open, view, setView, close: hide })
   MediaPanel({ gdkmonitor, open: media, close: hideMedia })
+  Calendar({ gdkmonitor, open: calendar, close: hideCalendar })
   Toasts({ gdkmonitor, hidden: open })
 
   // Lit only while the panel is showing what it opens, so the toggle and the
@@ -77,7 +93,10 @@ export default function Bar(gdkmonitor: Gdk.Monitor) {
           <Media open={media} onToggle={() => (media.get() ? hideMedia() : showMedia())} />
         </box>
         <box $type="center" valign={Gtk.Align.CENTER}>
-          <Clock />
+          <Clock
+            open={calendar}
+            onToggle={() => (calendar.get() ? hideCalendar() : showCalendar())}
+          />
         </box>
         {/* The design's own gap between two pills, brought down with the bar.
             It is the first place the strip holds more than one, and an invisible
